@@ -462,9 +462,9 @@ const Flip = ({
             transform: 'rotateX(180deg)',
           }}
         >
-          <div style={{ flex: '0 0 700px', fontWeight: 700 }}>{front}</div>
-          <div style={{ color: C.gold, fontSize: 52 }}>→</div>
-          <div style={{ flex: 1 }}>{back}</div>
+          <div style={{ flex: '0 0 640px', fontWeight: 700, fontSize: 40, lineHeight: 1.2 }}>{front}</div>
+          <div style={{ color: C.gold, fontSize: 48 }}>→</div>
+          <div style={{ flex: 1, fontSize: 38, lineHeight: 1.2 }}>{back}</div>
         </div>
       </div>
     </div>
@@ -489,6 +489,132 @@ const Chip = ({ children, strong }: { children: ReactNode; strong?: boolean }) =
 
 const Arrow = () => <div style={{ fontSize: 44, color: 'var(--osd-accent)' }}>→</div>;
 
+const Pair = ({
+  tag,
+  title,
+  lines,
+  tagExtra,
+}: {
+  tag: string;
+  title: string;
+  lines: ReactNode[];
+  tagExtra?: boolean;
+}) => (
+  <Card style={{ flex: 1, padding: '44px 44px' }}>
+    <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--osd-accent)', letterSpacing: '0.08em' }}>
+      {tag}
+      {tagExtra ? <Tag /> : null}
+    </div>
+    <div style={{ fontFamily: serif, fontSize: 52, fontWeight: 700, margin: '12px 0 24px', lineHeight: 1.3 }}>
+      {title}
+    </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, fontSize: 40, lineHeight: 1.5 }}>
+      {lines.map((l, i) => (
+        <div key={i}>{l}</div>
+      ))}
+    </div>
+  </Card>
+);
+
+const Vote = ({ n, children }: { n: string; children: ReactNode }) => (
+  <Card style={{ display: 'flex', alignItems: 'center', gap: 32, padding: '22px 40px' }}>
+    <div style={{ fontFamily: serif, fontSize: 68, fontWeight: 700, color: 'var(--osd-accent)' }}>{n}</div>
+    <div style={{ fontSize: 48 }}>{children}</div>
+  </Card>
+);
+
+const T3 = ({
+  a,
+  b,
+  c,
+  head,
+  warn,
+  cols = '300px 1fr 1fr',
+}: {
+  a: string;
+  b: string;
+  c: string;
+  head?: boolean;
+  warn?: boolean;
+  cols?: string;
+}) => (
+  <div
+    style={{
+      display: 'grid',
+      gridTemplateColumns: cols,
+      gap: 32,
+      padding: '18px 0',
+      borderBottom: `2px solid ${C.line}`,
+      fontSize: head ? 40 : 38,
+      fontWeight: head ? 700 : 400,
+      color: head ? 'var(--osd-accent)' : 'var(--osd-text)',
+      lineHeight: 1.4,
+    }}
+  >
+    <div style={{ fontWeight: 700, color: head ? 'var(--osd-accent)' : C.muted }}>{a}</div>
+    <div>{b}</div>
+    <div style={{ color: warn ? C.berry : undefined, fontWeight: warn ? 700 : head ? 700 : 400 }}>{c}</div>
+  </div>
+);
+
+
+const ChgRow = ({ n, title, line }: { n: string; title: string; line: string }) => (
+  <div
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 36,
+      background: C.panel,
+      borderRadius: 'var(--osd-radius)',
+      padding: '30px 44px',
+    }}
+  >
+    <div
+      style={{
+        flex: 'none',
+        width: 88,
+        height: 88,
+        borderRadius: 999,
+        background: 'var(--osd-accent)',
+        color: C.darkText,
+        fontFamily: serif,
+        fontSize: 50,
+        fontWeight: 700,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      {n}
+    </div>
+    <div>
+      <div style={{ fontFamily: serif, fontSize: 48, fontWeight: 700, lineHeight: 1.3 }}>
+        {title}
+      </div>
+      <div style={{ fontSize: 38, lineHeight: 1.5, color: C.muted, marginTop: 6 }}>{line}</div>
+    </div>
+  </div>
+);
+
+
+const T2 = ({ a, b, head, warn }: { a: string; b: string; head?: boolean; warn?: boolean }) => (
+  <div
+    style={{
+      display: 'grid',
+      gridTemplateColumns: '380px 1fr',
+      gap: 32,
+      padding: '22px 0',
+      borderBottom: `2px solid ${C.line}`,
+      fontSize: head ? 40 : 40,
+      fontWeight: head ? 700 : 400,
+      color: head ? 'var(--osd-accent)' : 'var(--osd-text)',
+      lineHeight: 1.45,
+    }}
+  >
+    <div style={{ fontWeight: 700, color: head ? 'var(--osd-accent)' : C.muted }}>{a}</div>
+    <div style={{ color: warn ? C.berry : undefined, fontWeight: warn ? 700 : undefined }}>{b}</div>
+  </div>
+);
 
 
 /* ---------- 02 專用小元件 ---------- */
@@ -1123,7 +1249,7 @@ export const notes: (string | undefined)[] = [
 
 export const meta: SlideMeta = {
   title: '生意超好，為什麼還會倒？',
-  createdAt: '2026-10-10T07:34:57.671Z',
+  createdAt: '2026-10-10T21:55:20.919Z',
 };
 
 export default [

@@ -462,9 +462,9 @@ const Flip = ({
             transform: 'rotateX(180deg)',
           }}
         >
-          <div style={{ flex: '0 0 700px', fontWeight: 700 }}>{front}</div>
-          <div style={{ color: C.gold, fontSize: 52 }}>→</div>
-          <div style={{ flex: 1 }}>{back}</div>
+          <div style={{ flex: '0 0 640px', fontWeight: 700, fontSize: 40, lineHeight: 1.2 }}>{front}</div>
+          <div style={{ color: C.gold, fontSize: 48 }}>→</div>
+          <div style={{ flex: 1, fontSize: 38, lineHeight: 1.2 }}>{back}</div>
         </div>
       </div>
     </div>
@@ -1136,7 +1136,7 @@ export const notes: (string | undefined)[] = [
 
 export const meta: SlideMeta = {
   title: '開店＝慢性死亡？',
-  createdAt: '2026-10-10T07:50:16.027Z',
+  createdAt: '2026-10-10T21:55:20.876Z',
 };
 
 export default [

@@ -944,9 +944,9 @@ const Pit = ({ cause, effect }: { cause: string; effect: string }) => {
             transform: 'rotateX(180deg)',
           }}
         >
-          <div style={{ flex: '0 0 760px', fontWeight: 700 }}>{cause}</div>
-          <div style={{ color: C.gold, fontSize: 52 }}>→</div>
-          <div style={{ flex: 1 }}>{effect}</div>
+          <div style={{ flex: '0 0 760px', fontWeight: 700, fontSize: 40, lineHeight: 1.2 }}>{cause}</div>
+          <div style={{ color: C.gold, fontSize: 48 }}>→</div>
+          <div style={{ flex: 1, fontSize: 40, lineHeight: 1.2 }}>{effect}</div>
         </div>
       </div>
     </div>

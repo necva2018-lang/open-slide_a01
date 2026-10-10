@@ -462,9 +462,9 @@ const Flip = ({
             transform: 'rotateX(180deg)',
           }}
         >
-          <div style={{ flex: '0 0 700px', fontWeight: 700 }}>{front}</div>
-          <div style={{ color: C.gold, fontSize: 52 }}>→</div>
-          <div style={{ flex: 1 }}>{back}</div>
+          <div style={{ flex: '0 0 640px', fontWeight: 700, fontSize: 40, lineHeight: 1.2 }}>{front}</div>
+          <div style={{ color: C.gold, fontSize: 48 }}>→</div>
+          <div style={{ flex: 1, fontSize: 38, lineHeight: 1.2 }}>{back}</div>
         </div>
       </div>
     </div>
@@ -1148,7 +1148,7 @@ export const notes: (string | undefined)[] = [
 
 export const meta: SlideMeta = {
   title: 'IG 發了一堆甜點照，為什麼還是沒訂單？',
-  createdAt: '2026-10-10T07:58:16.874Z',
+  createdAt: '2026-10-10T21:55:21.094Z',
 };
 
 export default [

@@ -462,9 +462,9 @@ const Flip = ({
             transform: 'rotateX(180deg)',
           }}
         >
-          <div style={{ flex: '0 0 700px', fontWeight: 700 }}>{front}</div>
-          <div style={{ color: C.gold, fontSize: 52 }}>→</div>
-          <div style={{ flex: 1 }}>{back}</div>
+          <div style={{ flex: '0 0 640px', fontWeight: 700, fontSize: 40, lineHeight: 1.2 }}>{front}</div>
+          <div style={{ color: C.gold, fontSize: 48 }}>→</div>
+          <div style={{ flex: 1, fontSize: 38, lineHeight: 1.2 }}>{back}</div>
         </div>
       </div>
     </div>
@@ -1211,7 +1211,7 @@ export const notes: (string | undefined)[] = [
 
 export const meta: SlideMeta = {
   title: '為什麼你的甜點很好吃，卻沒人買？',
-  createdAt: '2026-10-10T07:54:57.905Z',
+  createdAt: '2026-10-10T21:55:21.051Z',
 };
 
 export default [

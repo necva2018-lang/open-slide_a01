@@ -462,9 +462,9 @@ const Flip = ({
             transform: 'rotateX(180deg)',
           }}
         >
-          <div style={{ flex: '0 0 700px', fontWeight: 700 }}>{front}</div>
-          <div style={{ color: C.gold, fontSize: 52 }}>→</div>
-          <div style={{ flex: 1 }}>{back}</div>
+          <div style={{ flex: '0 0 640px', fontWeight: 700, fontSize: 40, lineHeight: 1.2 }}>{front}</div>
+          <div style={{ color: C.gold, fontSize: 48 }}>→</div>
+          <div style={{ flex: 1, fontSize: 38, lineHeight: 1.2 }}>{back}</div>
         </div>
       </div>
     </div>
@@ -1171,7 +1171,7 @@ export const notes: (string | undefined)[] = [
 
 export const meta: SlideMeta = {
   title: '「純手工」是烘焙小店最大的陷阱？',
-  createdAt: '2026-10-10T08:00:50.623Z',
+  createdAt: '2026-10-10T21:55:21.137Z',
 };
 
 export default [
