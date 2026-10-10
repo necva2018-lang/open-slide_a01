@@ -1,0 +1,1252 @@
+import {
+  type DesignSystem,
+  type Page,
+  type SlideMeta,
+  Step,
+  Steps,
+  useSlidePageNumber,
+} from '@open-slide/core';
+import { type CSSProperties, type ReactNode, useState } from 'react';
+
+export const design: DesignSystem = {
+  palette: { bg: '#f8f4e4', text: '#2c2918', accent: '#7d6200' },
+  fonts: {
+    display: '"Noto Serif TC", "Source Han Serif TC", "PMingLiU", "Songti TC", serif',
+    body: '"Noto Sans TC", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif',
+  },
+  typeScale: { hero: 150, body: 40 },
+  radius: 20,
+};
+
+// 額外色票（不在 DesignSystem 範圍內）
+const C = {
+  muted: '#5e5836',
+  line: '#e3dcb8',
+  panel: '#efe9c9',
+  berry: '#a8392a',
+  dark: '#2a2614',
+  darkText: '#f8f4e4',
+  darkMuted: '#d6cfa6',
+  gold: '#ecc659',
+};
+
+const FONT_HREF =
+  'https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700&family=Noto+Sans+TC:wght@400;500;700&display=swap';
+const FONT_LINK_ID = 'osd-webfont-05-hobby-to-income';
+if (typeof document !== 'undefined') {
+  let link = document.getElementById(FONT_LINK_ID) as HTMLLinkElement | null;
+  if (!link) {
+    link = document.createElement('link');
+    link.id = FONT_LINK_ID;
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+  }
+  if (link.href !== FONT_HREF) link.href = FONT_HREF;
+}
+
+const serif = 'var(--osd-font-display)';
+
+/* ---------- 共用元件 ---------- */
+
+const Footer = ({ dark }: { dark?: boolean }) => {
+  const { current, total } = useSlidePageNumber();
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        left: 140,
+        right: 140,
+        bottom: 40,
+        display: 'flex',
+        justifyContent: 'space-between',
+        fontSize: 24,
+        color: dark ? C.darkMuted : C.muted,
+      }}
+    >
+      <span>烘焙興趣變現：新手如何從 0 到月入 3 萬？</span>
+      <span>
+        {String(current).padStart(2, '0')} / {String(total).padStart(2, '0')}
+      </span>
+    </div>
+  );
+};
+
+// 章節進度條的頁碼區間。增刪、搬移頁面後，必須同步更新這裡的 from / to。
+const CHAPTERS = [
+  { name: '開場', from: 1, to: 5 },
+  { name: '想清楚', from: 6, to: 11 },
+  { name: '賣出去', from: 12, to: 17 },
+  { name: '算清楚', from: 18, to: 20 },
+  { name: '收尾', from: 21, to: 26 },
+];
+
+const ProgressBar = ({ dark }: { dark?: boolean }) => {
+  const { current } = useSlidePageNumber();
+  if (current === 1) return null;
+  const active = CHAPTERS.findIndex((c) => current >= c.from && current <= c.to);
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        left: 140,
+        right: 140,
+        top: 28,
+        display: 'flex',
+        gap: 14,
+      }}
+    >
+      {CHAPTERS.map((c, i) => {
+        const len = c.to - c.from + 1;
+        const fill = current > c.to ? 1 : current < c.from ? 0 : (current - c.from + 1) / len;
+        const on = i === active;
+        return (
+          <div key={c.name} style={{ flex: len }}>
+            <div
+              style={{
+                fontSize: 24,
+                fontWeight: on ? 700 : 400,
+                color: on ? (dark ? C.gold : 'var(--osd-accent)') : dark ? C.darkMuted : C.muted,
+                marginBottom: 8,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {c.name}
+            </div>
+            <div
+              style={{
+                height: 6,
+                borderRadius: 3,
+                background: dark ? 'rgba(255,255,255,0.22)' : C.line,
+              }}
+            >
+              <div
+                style={{
+                  width: `${fill * 100}%`,
+                  height: '100%',
+                  borderRadius: 3,
+                  background: dark ? C.gold : 'var(--osd-accent)',
+                }}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+const Slide = ({
+  dark,
+  center,
+  children,
+}: {
+  dark?: boolean;
+  center?: boolean;
+  children: ReactNode;
+}) => (
+  <div
+    style={{
+      width: '100%',
+      height: '100%',
+      position: 'relative',
+      overflow: 'hidden',
+      background: dark ? C.dark : 'var(--osd-bg)',
+      color: dark ? C.darkText : 'var(--osd-text)',
+      fontFamily: 'var(--osd-font-body)',
+      padding: '96px 140px 110px',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: center ? 'center' : 'flex-start',
+      WebkitFontSmoothing: 'antialiased',
+    }}
+  >
+    <ProgressBar dark={dark} />
+    {children}
+    <Footer dark={dark} />
+  </div>
+);
+
+const Eyebrow = ({ children, dark }: { children: ReactNode; dark?: boolean }) => (
+  <div
+    style={{
+      fontSize: 30,
+      fontWeight: 700,
+      letterSpacing: '0.12em',
+      color: dark ? C.gold : 'var(--osd-accent)',
+      marginBottom: 20,
+    }}
+  >
+    {children}
+  </div>
+);
+
+const H = ({
+  children,
+  size = 72,
+  dark,
+  style,
+}: {
+  children: ReactNode;
+  size?: number;
+  dark?: boolean;
+  style?: CSSProperties;
+}) => (
+  <h2
+    style={{
+      fontFamily: serif,
+      fontSize: size + 8,
+      fontWeight: 700,
+      lineHeight: 1.25,
+      margin: 0,
+      color: dark ? C.darkText : 'var(--osd-text)',
+      ...style,
+    }}
+  >
+    {children}
+  </h2>
+);
+
+const Tag = ({ children = '延伸建議' }: { children?: ReactNode }) => (
+  <span
+    style={{
+      display: 'inline-block',
+      fontSize: 28,
+      fontWeight: 700,
+      color: 'var(--osd-accent)',
+      border: '2px solid var(--osd-accent)',
+      borderRadius: 999,
+      padding: '2px 16px',
+      marginLeft: 16,
+      verticalAlign: 'middle',
+      letterSpacing: '0.04em',
+    }}
+  >
+    {children}
+  </span>
+);
+
+const Note = ({ children }: { children: ReactNode }) => (
+  <div style={{ fontSize: 30, color: C.muted, marginTop: 28 }}>{children}</div>
+);
+
+// 標題下方的內容區：吃掉剩餘高度並垂直置中，避免頁面下半部留白
+const Body = ({ children, style }: { children: ReactNode; style?: CSSProperties }) => (
+  <div
+    style={{
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      paddingBottom: 16,
+      ...style,
+    }}
+  >
+    {children}
+  </div>
+);
+
+const Card = ({ children, style }: { children: ReactNode; style?: CSSProperties }) => (
+  <div
+    style={{
+      background: C.panel,
+      borderRadius: 'var(--osd-radius)',
+      padding: '32px 40px',
+      ...style,
+    }}
+  >
+    {children}
+  </div>
+);
+
+const Row = ({ n, children }: { n: string; children: ReactNode }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
+    <div
+      style={{
+        flex: 'none',
+        width: 88,
+        height: 88,
+        borderRadius: 999,
+        background: 'var(--osd-accent)',
+        color: C.darkText,
+        fontFamily: serif,
+        fontSize: 48,
+        fontWeight: 700,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      {n}
+    </div>
+    <div style={{ fontSize: 50, lineHeight: 1.45 }}>{children}</div>
+  </div>
+);
+
+
+/* ---------- 共用頁面零件（所有簡報相同） ---------- */
+
+const GroupBox = ({ tag, title, items }: { tag: string; title: string; items: string[] }) => (
+  <div
+    style={{
+      flex: 1,
+      background: C.panel,
+      borderRadius: 'var(--osd-radius)',
+      padding: '44px 36px',
+    }}
+  >
+    <div
+      style={{ fontSize: 34, fontWeight: 700, color: 'var(--osd-accent)', letterSpacing: '0.1em' }}
+    >
+      {tag}
+    </div>
+    <div style={{ fontFamily: serif, fontSize: 64, fontWeight: 700, margin: '12px 0 28px' }}>
+      {title}
+    </div>
+    {items.map((t) => (
+      <div key={t} style={{ fontSize: 40, lineHeight: 1.6, whiteSpace: 'nowrap' }}>
+        {t}
+      </div>
+    ))}
+  </div>
+);
+
+const Chapter = ({ no, title, sub }: { no: string; title: string; sub: string }) => (
+  <Slide center>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 80 }}>
+      <div
+        style={{
+          fontFamily: serif,
+          fontSize: 300,
+          fontWeight: 700,
+          lineHeight: 1,
+          color: 'var(--osd-accent)',
+        }}
+      >
+        {no}
+      </div>
+      <div>
+        <H size={112}>{title}</H>
+        <div style={{ fontSize: 44, color: C.muted, marginTop: 24 }}>{sub}</div>
+      </div>
+    </div>
+  </Slide>
+);
+
+const Summary = ({ label, line }: { label: string; line: string }) => (
+  <Slide dark center>
+    <div style={{ fontSize: 32, color: C.gold, letterSpacing: '0.12em', fontWeight: 700 }}>
+      {label}
+    </div>
+    <H size={104} dark style={{ marginTop: 28, lineHeight: 1.3 }}>
+      {line}
+    </H>
+  </Slide>
+);
+
+const Q = ({ n, children }: { n: string; children: ReactNode }) => (
+  <Card style={{ display: 'flex', alignItems: 'center', gap: 28, padding: '44px 40px' }}>
+    <div style={{ fontFamily: serif, fontSize: 88, fontWeight: 700, color: 'var(--osd-accent)' }}>
+      {n}
+    </div>
+    <div style={{ fontSize: 46, lineHeight: 1.4 }}>{children}</div>
+  </Card>
+);
+
+const Col = ({ tag, title, body }: { tag: string; title: string; body: string }) => (
+  <div
+    style={{
+      flex: 1,
+      background: C.panel,
+      borderRadius: 'var(--osd-radius)',
+      padding: '52px 40px',
+    }}
+  >
+    <div
+      style={{
+        fontFamily: serif,
+        fontSize: 44,
+        fontWeight: 700,
+        color: C.darkText,
+        background: 'var(--osd-accent)',
+        display: 'inline-block',
+        padding: '4px 28px',
+        borderRadius: 999,
+      }}
+    >
+      {tag}
+    </div>
+    <div
+      style={{
+        fontFamily: serif,
+        fontSize: 58,
+        fontWeight: 700,
+        margin: '32px 0 20px',
+        lineHeight: 1.3,
+      }}
+    >
+      {title}
+    </div>
+    <div style={{ fontSize: 40, lineHeight: 1.6, color: C.muted, whiteSpace: 'pre-line' }}>
+      {body}
+    </div>
+  </div>
+);
+
+const TRow = ({ who, how, last }: { who: string; how: string; last?: boolean }) => (
+  <div
+    style={{
+      display: 'flex',
+      gap: 48,
+      padding: '28px 0',
+      borderBottom: last ? 'none' : `2px solid ${C.line}`,
+      fontSize: 42,
+      lineHeight: 1.45,
+    }}
+  >
+    <div style={{ flex: '0 0 480px', fontWeight: 700, color: 'var(--osd-accent)' }}>{who}</div>
+    <div style={{ flex: 1 }}>{how}</div>
+  </div>
+);
+
+// 翻牌卡：點一下，以 3D 旋轉翻到背面（需在播放模式 F 才點得動）
+const FACE: CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  display: 'flex',
+  alignItems: 'center',
+  gap: 32,
+  padding: '0 44px',
+  borderRadius: 'var(--osd-radius)',
+  fontSize: 44,
+  backfaceVisibility: 'hidden',
+  WebkitBackfaceVisibility: 'hidden',
+};
+
+const Flip = ({
+  front,
+  back,
+  hint = '點一下看答案',
+  h = 128,
+}: {
+  front: string;
+  back: string;
+  hint?: string;
+  h?: number;
+}) => {
+  const [flipped, setFlipped] = useState(false);
+  return (
+    <div
+      data-osd-interactive
+      onClick={() => setFlipped((f) => !f)}
+      style={{ perspective: 1400, cursor: 'pointer', height: h }}
+    >
+      <div
+        style={{
+          position: 'relative',
+          width: '100%',
+          height: '100%',
+          transformStyle: 'preserve-3d',
+          transition: 'transform 600ms cubic-bezier(0.22, 1, 0.36, 1)',
+          transform: flipped ? 'rotateX(180deg)' : 'rotateX(0deg)',
+        }}
+      >
+        <div style={{ ...FACE, background: C.panel }}>
+          <div style={{ flex: 1, fontWeight: 700 }}>{front}</div>
+          <div style={{ fontSize: 30, color: C.muted }}>{hint}</div>
+        </div>
+        <div
+          style={{
+            ...FACE,
+            background: C.dark,
+            color: C.darkText,
+            transform: 'rotateX(180deg)',
+          }}
+        >
+          <div style={{ flex: '0 0 700px', fontWeight: 700 }}>{front}</div>
+          <div style={{ color: C.gold, fontSize: 52 }}>→</div>
+          <div style={{ flex: 1 }}>{back}</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const Chip = ({ children, strong }: { children: ReactNode; strong?: boolean }) => (
+  <div
+    style={{
+      background: strong ? C.dark : C.panel,
+      color: strong ? C.darkText : 'var(--osd-text)',
+      borderRadius: 999,
+      padding: '14px 36px',
+      fontSize: 42,
+      fontWeight: 700,
+      whiteSpace: 'nowrap',
+    }}
+  >
+    {children}
+  </div>
+);
+
+const Arrow = () => <div style={{ fontSize: 44, color: 'var(--osd-accent)' }}>→</div>;
+
+const Pair = ({
+  tag,
+  title,
+  lines,
+  tagExtra,
+}: {
+  tag: string;
+  title: string;
+  lines: ReactNode[];
+  tagExtra?: boolean;
+}) => (
+  <Card style={{ flex: 1, padding: '44px 44px' }}>
+    <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--osd-accent)', letterSpacing: '0.08em' }}>
+      {tag}
+      {tagExtra ? <Tag /> : null}
+    </div>
+    <div style={{ fontFamily: serif, fontSize: 52, fontWeight: 700, margin: '12px 0 24px', lineHeight: 1.3 }}>
+      {title}
+    </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, fontSize: 40, lineHeight: 1.5 }}>
+      {lines.map((l, i) => (
+        <div key={i}>{l}</div>
+      ))}
+    </div>
+  </Card>
+);
+
+const Vote = ({ n, children }: { n: string; children: ReactNode }) => (
+  <Card style={{ display: 'flex', alignItems: 'center', gap: 32, padding: '22px 40px' }}>
+    <div style={{ fontFamily: serif, fontSize: 68, fontWeight: 700, color: 'var(--osd-accent)' }}>{n}</div>
+    <div style={{ fontSize: 48 }}>{children}</div>
+  </Card>
+);
+
+const T3 = ({
+  a,
+  b,
+  c,
+  head,
+  warn,
+  cols = '300px 1fr 1fr',
+}: {
+  a: string;
+  b: string;
+  c: string;
+  head?: boolean;
+  warn?: boolean;
+  cols?: string;
+}) => (
+  <div
+    style={{
+      display: 'grid',
+      gridTemplateColumns: cols,
+      gap: 32,
+      padding: '18px 0',
+      borderBottom: `2px solid ${C.line}`,
+      fontSize: head ? 40 : 38,
+      fontWeight: head ? 700 : 400,
+      color: head ? 'var(--osd-accent)' : 'var(--osd-text)',
+      lineHeight: 1.4,
+    }}
+  >
+    <div style={{ fontWeight: 700, color: head ? 'var(--osd-accent)' : C.muted }}>{a}</div>
+    <div>{b}</div>
+    <div style={{ color: warn ? C.berry : undefined, fontWeight: warn ? 700 : head ? 700 : 400 }}>{c}</div>
+  </div>
+);
+
+
+const ChgRow = ({ n, title, line }: { n: string; title: string; line: string }) => (
+  <div
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 36,
+      background: C.panel,
+      borderRadius: 'var(--osd-radius)',
+      padding: '30px 44px',
+    }}
+  >
+    <div
+      style={{
+        flex: 'none',
+        width: 88,
+        height: 88,
+        borderRadius: 999,
+        background: 'var(--osd-accent)',
+        color: C.darkText,
+        fontFamily: serif,
+        fontSize: 50,
+        fontWeight: 700,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      {n}
+    </div>
+    <div>
+      <div style={{ fontFamily: serif, fontSize: 48, fontWeight: 700, lineHeight: 1.3 }}>
+        {title}
+      </div>
+      <div style={{ fontSize: 38, lineHeight: 1.5, color: C.muted, marginTop: 6 }}>{line}</div>
+    </div>
+  </div>
+);
+
+
+const T2 = ({ a, b, head, warn }: { a: string; b: string; head?: boolean; warn?: boolean }) => (
+  <div
+    style={{
+      display: 'grid',
+      gridTemplateColumns: '380px 1fr',
+      gap: 32,
+      padding: '22px 0',
+      borderBottom: `2px solid ${C.line}`,
+      fontSize: head ? 40 : 40,
+      fontWeight: head ? 700 : 400,
+      color: head ? 'var(--osd-accent)' : 'var(--osd-text)',
+      lineHeight: 1.45,
+    }}
+  >
+    <div style={{ fontWeight: 700, color: head ? 'var(--osd-accent)' : C.muted }}>{a}</div>
+    <div style={{ color: warn ? C.berry : undefined, fontWeight: warn ? 700 : undefined }}>{b}</div>
+  </div>
+);
+
+
+/* ---------- 05 專用小元件 ---------- */
+
+const StepRow = ({ n, children, hot }: { n: string; children: ReactNode; hot?: boolean }) => (
+  <div
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 20,
+      background: hot ? C.dark : C.panel,
+      color: hot ? C.darkText : 'var(--osd-text)',
+      borderRadius: 'var(--osd-radius)',
+      padding: '18px 28px',
+      fontSize: 38,
+      lineHeight: 1.35,
+    }}
+  >
+    <div
+      style={{
+        flex: 'none',
+        fontFamily: serif,
+        fontSize: 52,
+        fontWeight: 700,
+        color: hot ? C.gold : 'var(--osd-accent)',
+        width: 48,
+      }}
+    >
+      {n}
+    </div>
+    <div style={{ fontWeight: hot ? 700 : 400 }}>{children}</div>
+  </div>
+);
+
+const Num = ({ label, value, dark }: { label: string; value: string; dark?: boolean }) => (
+  <div
+    style={{
+      flex: 1,
+      borderRadius: 'var(--osd-radius)',
+      padding: '30px 24px',
+      textAlign: 'center',
+      background: dark ? C.dark : C.panel,
+      color: dark ? C.darkText : 'var(--osd-text)',
+    }}
+  >
+    <div style={{ fontSize: 34, fontWeight: 700, color: dark ? C.gold : C.muted }}>{label}</div>
+    <div style={{ fontFamily: serif, fontSize: 84, fontWeight: 700, lineHeight: 1.2, marginTop: 8 }}>{value}</div>
+  </div>
+);
+
+const Op = ({ children }: { children: ReactNode }) => (
+  <div
+    style={{
+      fontFamily: serif,
+      fontSize: 44,
+      fontWeight: 700,
+      color: 'var(--osd-accent)',
+      textAlign: 'center',
+      whiteSpace: 'nowrap',
+      lineHeight: 1.2,
+    }}
+  >
+    {children}
+  </div>
+);
+
+const Blank = ({ label, unit }: { label: string; unit: string }) => (
+  <div
+    style={{
+      flex: 1,
+      borderRadius: 'var(--osd-radius)',
+      padding: '30px 24px',
+      textAlign: 'center',
+      background: C.panel,
+    }}
+  >
+    <div style={{ fontSize: 34, fontWeight: 700, color: C.muted }}>{label}</div>
+    <div style={{ borderBottom: `5px solid ${C.muted}`, height: 84, margin: '8px 20px 0' }} />
+    <div style={{ fontSize: 34, color: C.muted, marginTop: 10 }}>{unit}</div>
+  </div>
+);
+
+const Q4 = ({ n, t }: { n: string; t: string }) => (
+  <Card style={{ display: 'flex', alignItems: 'center', gap: 24, padding: '34px 36px' }}>
+    <div style={{ fontFamily: serif, fontSize: 68, fontWeight: 700, color: 'var(--osd-accent)' }}>{n}</div>
+    <div style={{ fontSize: 48 }}>{t}</div>
+  </Card>
+);
+
+/* ---------- 開場 ---------- */
+
+const Cover: Page = () => (
+  <Slide center>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ maxWidth: 1100 }}>
+        <Eyebrow>職訓班課程｜餐飲創業</Eyebrow>
+        <h1 style={{ fontFamily: serif, fontSize: 136, fontWeight: 700, lineHeight: 1.18, margin: '0 0 40px' }}>
+          烘焙興趣變現
+        </h1>
+        <div style={{ fontSize: 50, color: 'var(--osd-accent)', fontWeight: 500, lineHeight: 1.5 }}>
+          新手如何從 0 到月入 3 萬？
+        </div>
+      </div>
+      <svg width="520" height="420" viewBox="0 0 520 420" aria-hidden="true">
+        <rect x="20" y="170" width="260" height="210" rx="14" fill={C.panel} stroke={C.muted} strokeWidth="5" />
+        <rect x="50" y="200" width="200" height="110" rx="8" fill={C.dark} />
+        <circle cx="150" cy="255" r="30" fill="var(--osd-accent)" opacity="0.9" />
+        <circle cx="70" cy="340" r="9" fill={C.muted} />
+        <circle cx="230" cy="340" r="9" fill={C.muted} />
+        <ellipse cx="410" cy="320" rx="90" ry="22" fill={C.line} stroke={C.muted} strokeWidth="4" />
+        <ellipse cx="380" cy="300" rx="34" ry="10" fill="var(--osd-accent)" />
+        <ellipse cx="420" cy="292" rx="34" ry="10" fill={C.gold} />
+        <ellipse cx="450" cy="308" rx="30" ry="9" fill="var(--osd-accent)" />
+        <g transform="rotate(8 430 120)">
+          <rect x="350" y="40" width="160" height="190" fill={C.darkText} stroke={C.muted} strokeWidth="4" />
+          <line x1="372" y1="80" x2="488" y2="80" stroke={C.muted} strokeWidth="5" />
+          <line x1="372" y1="116" x2="488" y2="116" stroke={C.line} strokeWidth="5" />
+          <line x1="372" y1="150" x2="470" y2="150" stroke={C.line} strokeWidth="5" />
+          <text x="490" y="208" textAnchor="end" fontSize="38" fontWeight="700" fill={C.berry}>$ $ $</text>
+        </g>
+      </svg>
+    </div>
+  </Slide>
+);
+
+const Hook: Page = () => (
+  <Slide>
+    <Eyebrow>先舉手</Eyebrow>
+    <H size={72}>
+      如果要開始賣自己做的甜點，
+      <br />
+      你最擔心哪一項？
+    </H>
+    <Body>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28 }}>
+        <Q4 n="A" t="成本" />
+        <Q4 n="B" t="定價" />
+        <Q4 n="C" t="行銷" />
+        <Q4 n="D" t="接單、面交" />
+      </div>
+      <Note>先舉手記下票數，最後一頁再問一次</Note>
+    </Body>
+  </Slide>
+);
+
+const Stuck: Page = () => (
+  <Slide>
+    <Eyebrow>對上班族、全職媽媽來說</Eyebrow>
+    <H size={72}>卡住你的，通常不是技術</H>
+    <Body>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
+        <Chip>成本</Chip>
+        <Chip>定價</Chip>
+        <Chip>行銷</Chip>
+        <Chip>面交</Chip>
+        <Arrow />
+        <div style={{ fontSize: 44, fontWeight: 700, color: C.berry }}>同時出現，大腦打結，就逃避</div>
+      </div>
+      <Card style={{ marginTop: 44, padding: '40px 48px', background: C.dark, color: C.darkText }}>
+        <div style={{ fontSize: 34, fontWeight: 700, color: C.gold }}>如果想把烘焙發展成一門小生意</div>
+        <div style={{ fontFamily: serif, fontSize: 52, fontWeight: 700, lineHeight: 1.5, marginTop: 12 }}>
+          關鍵不在誰的技術最頂尖，
+          <br />
+          而在誰更懂商業邏輯。
+        </div>
+      </Card>
+    </Body>
+  </Slide>
+);
+
+const NotThis: Page = () => (
+  <Slide>
+    <Eyebrow>先講清楚</Eyebrow>
+    <H size={88}>這場不是什麼</H>
+    <Body>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 40, fontSize: 54 }}>
+        <Steps>
+          <Step>
+            <div>
+              <span style={{ color: C.berry, fontWeight: 700, marginRight: 24 }}>✕</span>
+              不教你怎麼做甜點
+            </div>
+          </Step>
+          <Step>
+            <div>
+              <span style={{ color: C.berry, fontWeight: 700, marginRight: 24 }}>✕</span>
+              不是保證你月入 3 萬
+            </div>
+          </Step>
+          <Step>
+            <div>
+              <span style={{ color: C.berry, fontWeight: 700, marginRight: 24 }}>✕</span>
+              不是叫你馬上辭職
+            </div>
+          </Step>
+          <Step>
+            <div
+              style={{
+                marginTop: 20,
+                background: C.panel,
+                borderRadius: 'var(--osd-radius)',
+                padding: '28px 40px',
+                fontWeight: 700,
+              }}
+            >
+              <span style={{ color: 'var(--osd-accent)', marginRight: 24 }}>✓</span>
+              是把興趣拆成 6 個步驟
+            </div>
+          </Step>
+        </Steps>
+      </div>
+    </Body>
+  </Slide>
+);
+
+const Agenda: Page = () => (
+  <Slide>
+    <Eyebrow>今天的順序</Eyebrow>
+    <H size={88}>6 個步驟，分 3 組</H>
+    <Body>
+      <div style={{ display: 'flex', gap: 40 }}>
+        <GroupBox tag="步驟 ①②" title="想清楚" items={['定位與選品', '成本與訂價']} />
+        <GroupBox tag="步驟 ③④⑤" title="賣出去" items={['形象與管道', '接單流程']} />
+        <GroupBox tag="步驟 ⑥" title="算清楚" items={['業績倒推', '月入 2～3 萬']} />
+      </div>
+    </Body>
+  </Slide>
+);
+
+/* ---------- 第一組：想清楚 ---------- */
+
+const Ch1: Page = () => <Chapter no="01" title="想清楚" sub="步驟 ①②" />;
+
+const Switch: Page = () => (
+  <Slide>
+    <Eyebrow>步驟 ①・心態轉換</Eyebrow>
+    <H size={72}>興趣和生意，有 3 個不一樣</H>
+    <Body>
+      <div>
+        <T3 head a="" b="興趣" c="生意" />
+        <T3 a="邏輯" b="開心就好" c="可複製、可獲利、可持續" />
+        <T3 a="時間" b="慢慢做" c="計算每小時產值" />
+        <T3 a="成本" b="不在意" c="開始在意，才是經營者" />
+      </div>
+      <div style={{ fontFamily: serif, fontSize: 44, fontWeight: 700, color: C.berry, marginTop: 40, lineHeight: 1.5 }}>
+        花 4 小時只賺 800 元，不是副業，是低薪勞動。
+      </div>
+    </Body>
+  </Slide>
+);
+
+const Position: Page = () => (
+  <Slide>
+    <Eyebrow>步驟 ①・產品定位</Eyebrow>
+    <H size={72}>為誰而做？賣什麼？</H>
+    <Body>
+      <div style={{ display: 'flex', gap: 40 }}>
+        <Pair
+          tag="為誰而做"
+          title="專攻小眾族群"
+          lines={['好吃的店太多，超商也好吃便宜', '例：長居台灣的印尼、越南、菲律賓', '價格不易被比較，一人產能撐得住']}
+        />
+        <Pair
+          tag="賣什麼"
+          title="只賣最好賣的 3 項"
+          lines={['常溫餅乾，比鮮奶油蛋糕適合新手', '高利潤、低風險、可大量複製', '與其賣 10 項，不如只賣 3 項']}
+        />
+      </div>
+      <div style={{ fontSize: 38, color: C.muted, marginTop: 28 }}>
+        其他小眾方向：素食、低糖、過敏原友善
+        <Tag />
+      </div>
+    </Body>
+  </Slide>
+);
+
+const Price: Page = () => (
+  <Slide>
+    <Eyebrow>步驟 ②・均衡訂價法</Eyebrow>
+    <H size={72}>兩個數字，一個算式</H>
+    <Body>
+      <div style={{ display: 'flex', gap: 28, fontSize: 44, fontWeight: 700, marginBottom: 36 }}>
+        <div style={{ background: C.panel, borderRadius: 'var(--osd-radius)', padding: '18px 36px' }}>
+          食材成本 <span style={{ color: 'var(--osd-accent)' }}>≤ 30%</span>
+        </div>
+        <div style={{ background: C.panel, borderRadius: 'var(--osd-radius)', padding: '18px 36px' }}>
+          平均利潤 <span style={{ color: 'var(--osd-accent)' }}>≥ 40%</span>
+        </div>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+        <Num label="食材成本" value="36 元" />
+        <Op>
+          ÷ 0.3
+          <br />→
+        </Op>
+        <Num label="保本價" value="120 元" />
+        <Op>
+          × 1.4
+          <br />→
+        </Op>
+        <Num label="訂價" value="168 元" dark />
+      </div>
+      <Note>30%、40% 是業界經驗的建議值，不是統計</Note>
+    </Body>
+  </Slide>
+);
+
+const Market: Page = () => (
+  <Slide>
+    <Eyebrow>步驟 ②・參考市場行情再修正</Eyebrow>
+    <H size={72}>算出來的價，要對照行情</H>
+    <Body>
+      <div>
+        <T2 head a="市場行情" b="做法" />
+        <T2 a="160～180 元" b="依人氣，持平 168，或調到 180" />
+        <T2 a="130～150 元" b="降到 150，不足的利潤，由其他高利潤商品補" />
+        <T2 warn a="被迫降到 130 元" b="太接近保本價 120，一開始就不要賣" />
+      </div>
+      <div style={{ fontSize: 40, color: C.muted, marginTop: 36 }}>全部品項的平均利潤，要維持在 40% 以上。</div>
+    </Body>
+  </Slide>
+);
+
+const Sum1: Page = () => <Summary label="這一組只記一句" line="食材 30%，利潤 40%" />;
+
+/* ---------- 第二組：賣出去 ---------- */
+
+const Ch2: Page = () => <Chapter no="02" title="賣出去" sub="步驟 ③～⑤" />;
+
+const Brand: Page = () => (
+  <Slide>
+    <Eyebrow>步驟 ③・專業形象</Eyebrow>
+    <H size={72}>先用最省錢的方式，做出專業感</H>
+    <Body>
+      <div>
+        <T2 a="包裝" b="麵包用防油袋就好；甜點、常溫西點，用有質感的包材" />
+        <T2 a="名稱＋Logo" b="用 Canva 模板自己做，上軌道再重新設計" />
+        <T2 a="產品照" b="手機拍：背景簡潔、靠窗自然光、45 度角或俯拍" />
+      </div>
+      <Note>這是副業起步期的做法，收入穩定後，再請專業攝影師</Note>
+    </Body>
+  </Slide>
+);
+
+const Channel: Page = () => (
+  <Slide>
+    <Eyebrow>步驟 ④・訂單管道</Eyebrow>
+    <H size={72}>讓陌生人找到你</H>
+    <Body>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 26 }}>
+        <ChgRow n="1" title="FB ＋ IG 同時經營" line="年齡層不同，一篇圖文兩邊發" />
+        <ChgRow n="2" title="加入目標客群的臉書社團" line="友善介紹新品牌，用 5 折試賣價邀請回饋" />
+        <ChgRow n="3" title="週末市集" line="一邊賣，一邊和潛在顧客直接互動" />
+      </div>
+    </Body>
+  </Slide>
+);
+
+const Strangers: Page = () => (
+  <Slide>
+    <Eyebrow>步驟 ④・不要靠親友團</Eyebrow>
+    <H size={72}>真正幫到你的，是陌生人</H>
+    <Body>
+      <div style={{ display: 'flex', gap: 40 }}>
+        <Pair
+          tag="前 200 位陌生客"
+          title="說實話的人"
+          lines={['用試賣價，收集回饋、反覆修正', '知道你在測試，容錯度高', '同時回收現金，不白燒錢']}
+        />
+        <Pair
+          tag="親友團"
+          title="拿人手軟的人"
+          lines={['試吃：都說好吃', '購買：只是捧場', '最後欠一堆人情']}
+        />
+      </div>
+      <Note>200 位、5 折是業界經驗的做法，不是統計</Note>
+    </Body>
+  </Slide>
+);
+
+const Sop: Page = () => (
+  <Slide>
+    <Eyebrow>步驟 ⑤・接單 SOP</Eyebrow>
+    <H size={72}>7 步，把接單變成流程</H>
+    <Body>
+      <div style={{ display: 'flex', gap: 28 }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <StepRow n="1">產品目錄做成圖片，置頂</StepRow>
+          <StepRow n="2">用 Google 表單或私訊下單</StepRow>
+          <StepRow n="3">記下姓名、電話、品項、金額、取貨日</StepRow>
+          <StepRow n="4" hot>先收 50% 訂金，無論金額高低</StepRow>
+        </div>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <StepRow n="5">盡量設計可冷凍宅配的產品</StepRow>
+          <StepRow n="6">附保存與退冰說明</StepRow>
+          <StepRow n="7">滿額免運，提高客單價</StepRow>
+        </div>
+      </div>
+    </Body>
+  </Slide>
+);
+
+const Sum2: Page = () => <Summary label="這一組只記一句" line="無論金額高低，先收 50% 訂金" />;
+
+/* ---------- 第三組：算清楚 ---------- */
+
+const Ch3: Page = () => <Chapter no="03" title="算清楚" sub="步驟 ⑥" />;
+
+const Reverse: Page = () => (
+  <Slide>
+    <Eyebrow>步驟 ⑥・業績估算</Eyebrow>
+    <H size={72}>用數字倒推，月入 2～3 萬怎麼來</H>
+    <Body>
+      <div>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '210px 230px 1fr 1fr',
+            gap: 24,
+            padding: '16px 0',
+            borderBottom: `2px solid ${C.line}`,
+            fontSize: 34,
+            fontWeight: 700,
+            color: 'var(--osd-accent)',
+            lineHeight: 1.35,
+          }}
+        >
+          <div>目標淨利</div>
+          <div>月營收</div>
+          <div>每週開單 1 次，每次要賣</div>
+          <div>每週開單 2 次，每次要賣</div>
+        </div>
+        {[
+          ['2 萬', '5 萬', '12,500 元', '6,250 元'],
+          ['3 萬', '7.5 萬', '18,750 元', '9,375 元'],
+        ].map((r) => (
+          <div
+            key={r[0]}
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '210px 230px 1fr 1fr',
+              gap: 24,
+              padding: '26px 0',
+              borderBottom: `2px solid ${C.line}`,
+              fontFamily: serif,
+              fontSize: 54,
+              fontWeight: 700,
+            }}
+          >
+            <div style={{ color: C.muted }}>{r[0]}</div>
+            <div>{r[1]}</div>
+            <div style={{ color: 'var(--osd-accent)' }}>{r[2]}</div>
+            <div style={{ color: 'var(--osd-accent)' }}>{r[3]}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ fontSize: 40, lineHeight: 1.6, marginTop: 32 }}>
+        月營收 ＝ 目標淨利 ÷ 40%。只靠面交很難達標，要<b style={{ color: C.berry }}>宅配賣到全台</b>。
+      </div>
+      <Note>3 萬那一列，是依同一個算式算出來的</Note>
+    </Body>
+  </Slide>
+);
+
+const Sum3: Page = () => <Summary label="這一組只記一句" line="月入 2～3 萬，是算出來的" />;
+
+/* ---------- 收尾 ---------- */
+
+const Pitfalls: Page = () => (
+  <Slide>
+    <Eyebrow>踩坑分享</Eyebrow>
+    <H size={72}>從「做給家人吃」到「賣給陌生人」</H>
+    <Body>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <Flip front="不好意思收訂金" back="被放鴿子，心力交瘁" hint="點一下看後果" h={100} />
+        <Flip front="只聽親友說好吃" back="欠人情，看不清市場" hint="點一下看後果" h={100} />
+        <Flip front="花 4 小時只賺 800 元" back="是低薪勞動，不是副業" hint="點一下看後果" h={100} />
+        <Flip front="只靠面交" back="很難達標，要宅配全台" hint="點一下看後果" h={100} />
+        <Flip front="什麼都想賣" back="耗時費力，沒有記憶點" hint="點一下看後果" h={100} />
+      </div>
+    </Body>
+  </Slide>
+);
+
+const Tool: Page = () => (
+  <Slide>
+    <Eyebrow>今天帶走的工具</Eyebrow>
+    <H size={72}>訂價計算卡</H>
+    <Body>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+        <Blank label="食材成本" unit="元" />
+        <Op>
+          ÷ 0.3
+          <br />→
+        </Op>
+        <Blank label="保本價" unit="元" />
+        <Op>
+          × (1＋利潤)
+          <br />→
+        </Op>
+        <Blank label="訂價" unit="元" />
+      </div>
+      <div style={{ marginTop: 40 }}>
+        <Flip front="練習：食材成本 45 元，保本價？訂價？" back="150 元，210 元" hint="點一下看答案" h={112} />
+      </div>
+      <Note>先自己算，再翻牌對答案</Note>
+    </Body>
+  </Slide>
+);
+
+const Outcome: Page = () => (
+  <Slide>
+    <Eyebrow>預期的成果</Eyebrow>
+    <H size={72}>留下來的，是一套系統</H>
+    <Body>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <ChgRow n="1" title="穩定創造現金流" line="靠系統，不是用體力拼業績" />
+        <ChgRow n="2" title="可冷凍、標準化、利潤穩定" line="副業才有擴張的價值" />
+        <ChgRow n="3" title="收入滿意，可以轉為主業" line="延伸建議：再接著學工作室的經營" />
+      </div>
+    </Body>
+  </Slide>
+);
+
+const DiscussQA: Page = () => (
+  <Slide>
+    <Eyebrow>課堂練習＋ Q&amp;A</Eyebrow>
+    <H size={72}>先算 3 分鐘，再來問答</H>
+    <Body>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 36 }}>
+        <Row n="1">想月淨利 1.5 萬、每週開單 1 次，每次要賣多少？</Row>
+        <Row n="2">列出你會做的 10 項，篩到最好賣的 3 項</Row>
+        <Row n="3">你最擔心哪一項？現在有改變嗎？</Row>
+      </div>
+      <div style={{ fontFamily: serif, fontSize: 64, fontWeight: 700, color: 'var(--osd-accent)', marginTop: 56 }}>
+        Q&amp;A　有問題，現在問
+      </div>
+    </Body>
+  </Slide>
+);
+
+const TakeAway: Page = () => (
+  <Slide>
+    <Eyebrow>今天帶走的三樣</Eyebrow>
+    <H size={72}>一個觀念、一個工具、一個行動</H>
+    <Body>
+      <div style={{ display: 'flex', gap: 36 }}>
+        <Col tag="觀念" title="商業邏輯" body={'卡住你的\n不是技術'} />
+        <Col tag="工具" title="均衡訂價法" body={'食材 ÷ 0.3\n× (1＋利潤)'} />
+        <Col tag="行動" title="算出第一個價" body={'用你想賣的商品\n算一次'} />
+      </div>
+    </Body>
+  </Slide>
+);
+
+const Closing: Page = () => (
+  <Slide dark center>
+    <div style={{ fontSize: 32, color: C.gold, letterSpacing: '0.12em', fontWeight: 700 }}>
+      最後一句話
+    </div>
+    <H size={104} dark style={{ marginTop: 32, lineHeight: 1.35 }}>
+      副業不是用體力拼業績，
+      <br />
+      是建立穩定賺現金的系統。
+    </H>
+    <div style={{ fontSize: 40, color: C.darkMuted, marginTop: 48, lineHeight: 1.6 }}>
+      再問一次：賣自己做的甜點，你最擔心哪一項？
+      <br />
+      <span style={{ color: C.gold }}>A 成本　B 定價　C 行銷　D 接單、面交</span>
+    </div>
+  </Slide>
+);
+
+export const notes: (string | undefined)[] = [
+  '歡迎大家。今天要談的是：怎麼把烘焙興趣，變成每個月多 2 到 3 萬的副業。重點不是技術，是商業邏輯。',
+  '先請大家舉手。如果要開始賣自己做的甜點，你最擔心哪一項？A 成本、B 定價、C 行銷、D 接單和面交。記下票數，最後一頁再問一次。',
+  '對上班族、全職媽媽來說，烘焙常是一週裡最療癒的時刻。真正卡住你的，通常不是技術，而是成本、定價、行銷、面交同時出現時，大腦打結，就選擇逃避。如果想把它發展成一門小生意，關鍵不在誰的技術最頂尖，而在誰更懂商業邏輯、能設計出可持續的接單模式。',
+  '先講清楚這場不是什麼：不教做甜點、不保證月入 3 萬、也不是叫你馬上辭職。是把興趣拆成 6 個步驟。',
+  '6 個步驟分三組：先想清楚定位、選品、成本和訂價；再賣出去，包含形象、管道、接單流程；最後算清楚業績。',
+  undefined,
+  '步驟一，三個轉換。邏輯：興趣是開心就好，生意要可複製、可獲利、可持續，客人下單幾次，味道和尺寸都要一樣。時間：興趣可以慢慢做，生意要算單位時間產出，花 4 小時只賺 800 元，不是副業，是低薪勞動。成本：開始在意成本，才是站在經營者的位置思考。',
+  '產品定位。台灣不缺好吃的，缺的是明確的定位。不建議做自己擅長的賣給親友，因為好吃的店太多，超商也好吃又便宜。這位業界創業者建議專攻小眾族群，例如長居台灣的印尼、越南、菲律賓族群，賣點是特定族群的需求，價格不容易被比較，一人產能也撐得住。選品：常溫餅乾比鮮奶油蛋糕適合新手，追求高利潤、低風險、可大量複製，與其賣十項，不如只賣三項。下面其他小眾方向，是我們整理的延伸建議。',
+  '訂價。兩個數字：食材成本控制在 30% 以內，一人工作室平均利潤至少 40%，這是業界經驗的建議值。算式：食材成本除以 0.3，是保本價；再乘上一加目標利潤，就是訂價。例如食材 36 元，除以 0.3 是 120 元，乘 1.4 是 168 元。',
+  '算出來的價，要對照市場行情。市場在 160 到 180：依人氣持平 168 或調到 180。市場在 130 到 150：可降到 150，不足的利潤由其他高利潤商品補，讓全部品項平均維持 40%。如果被迫降到 130，太接近保本價 120，一開始就不要賣這項。',
+  '第一組只記一句：食材 30%，利潤 40%。',
+  undefined,
+  '步驟三，專業形象。包裝：麵包用防油袋就好，甜點、常溫西點用有質感的包材，提升感知價值。名稱和 Logo：用 Canva 模板自己做，上軌道後再重新設計。產品照：手機拍，背景簡潔、靠窗自然光、45 度角或俯拍。這是副業起步期的做法，收入穩定後，可以再請專業攝影師。',
+  '步驟四，訂單管道。先同時經營 FB 和 IG，一篇圖文兩邊發。再加入目標客群的臉書社團，用友善的語氣介紹，用 5 折試賣價邀請回饋。有能力的話，參加週末市集，直接和潛在顧客互動。',
+  '兩個重要觀念。第一，收集前 200 位顧客的回饋，用試賣價，讓他們知道你在測試，容錯度比較高，也能回收一部分現金。第二，不建議靠親友團：試吃拿人手軟，都說好吃；購買只是捧場，最後欠一堆人情。真正有幫助的，是網路上會說實話的陌生人。這些做法是業界經驗，不是統計。',
+  '步驟五，接單 SOP，7 步。目錄做成圖片置頂；Google 表單或私訊下單；記錄姓名、電話、品項、金額、取貨日；先收 50% 訂金，無論金額高低，這步最重要；盡量設計可冷凍宅配的產品；附保存與退冰說明；滿額免運。',
+  '第二組只記一句：無論金額高低，先收 50% 訂金。',
+  undefined,
+  '步驟六，用數字倒推。加薪 2 到 3 萬指的是淨利，以淨利 40% 來算：目標 2 萬，月營收要 5 萬；每週開單一次，每次要賣 12,500；每週開單兩次，每次 6,250。目標 3 萬，月營收 7.5 萬，每次 18,750 或 9,375，這一列是依同一個算式算出來的。只靠面交很難達標，要靠宅配賣到全台。',
+  '第三組只記一句：月入 2 到 3 萬，是算出來的。',
+  '從做給家人吃，到賣給陌生人，最常卡的五關，是翻牌卡，請同學先猜後果再翻。注意：要按 F 進播放模式才點得動。',
+  '今天帶走的工具：訂價計算卡。食材成本除以 0.3 是保本價，再乘一加利潤是訂價。請大家先自己算練習題：食材成本 45 元，保本價是 150，訂價是 210，算完再翻牌對答案。',
+  '預期的成果：有一套能穩定創造現金流的系統，不是用體力拼業績。產品可冷凍、標準化、利潤結構穩定，副業才有擴張的價值。收入滿意時，可以考慮轉為主業，這是延伸建議。',
+  '請大家花三分鐘做練習。第一題倒推：淨利 1.5 萬，營收是 3.75 萬，每週開單一次，每次要賣 9,375 元。第二題選品；第三題回到開場的問題。接著開放問答。',
+  '帶走三樣：一個觀念，卡住你的不是技術，是商業邏輯；一個工具，均衡訂價法；一個行動，用你最想賣的一項商品，算出第一個價格。',
+  '最後一句話：副業不是用體力拼業績，是建立穩定賺現金的系統。現在再舉一次手：賣自己做的甜點，你最擔心哪一項？看看和一開始比，哪一項的擔心變少了。謝謝大家。',
+];
+
+export const meta: SlideMeta = {
+  title: '烘焙興趣變現：新手如何從 0 到月入 3 萬？',
+  createdAt: '2026-10-10T07:51:25.122Z',
+};
+
+export default [
+  Cover,
+  Hook,
+  Stuck,
+  NotThis,
+  Agenda,
+  Ch1,
+  Switch,
+  Position,
+  Price,
+  Market,
+  Sum1,
+  Ch2,
+  Brand,
+  Channel,
+  Strangers,
+  Sop,
+  Sum2,
+  Ch3,
+  Reverse,
+  Sum3,
+  Pitfalls,
+  Tool,
+  Outcome,
+  DiscussQA,
+  TakeAway,
+  Closing,
+] satisfies Page[];

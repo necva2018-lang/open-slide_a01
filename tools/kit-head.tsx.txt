@@ -1,0 +1,279 @@
+import {
+  type DesignSystem,
+  type Page,
+  type SlideMeta,
+  Step,
+  Steps,
+  useSlidePageNumber,
+} from '@open-slide/core';
+import { type CSSProperties, type ReactNode, useState } from 'react';
+
+export const design: DesignSystem = {
+  palette: { bg: '__bg__', text: '__text__', accent: '__accent__' },
+  fonts: {
+    display: '"Noto Serif TC", "Source Han Serif TC", "PMingLiU", "Songti TC", serif',
+    body: '"Noto Sans TC", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif',
+  },
+  typeScale: { hero: 150, body: 40 },
+  radius: 20,
+};
+
+// 額外色票（不在 DesignSystem 範圍內）
+const C = {
+  muted: '__muted__',
+  line: '__line__',
+  panel: '__panel__',
+  berry: '__berry__',
+  dark: '__dark__',
+  darkText: '__darkText__',
+  darkMuted: '__darkMuted__',
+  gold: '__gold__',
+};
+
+const FONT_HREF =
+  'https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700&family=Noto+Sans+TC:wght@400;500;700&display=swap';
+const FONT_LINK_ID = 'osd-webfont-__ID__';
+if (typeof document !== 'undefined') {
+  let link = document.getElementById(FONT_LINK_ID) as HTMLLinkElement | null;
+  if (!link) {
+    link = document.createElement('link');
+    link.id = FONT_LINK_ID;
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+  }
+  if (link.href !== FONT_HREF) link.href = FONT_HREF;
+}
+
+const serif = 'var(--osd-font-display)';
+
+/* ---------- 共用元件 ---------- */
+
+const Footer = ({ dark }: { dark?: boolean }) => {
+  const { current, total } = useSlidePageNumber();
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        left: 140,
+        right: 140,
+        bottom: 40,
+        display: 'flex',
+        justifyContent: 'space-between',
+        fontSize: 24,
+        color: dark ? C.darkMuted : C.muted,
+      }}
+    >
+      <span>__TITLE__</span>
+      <span>
+        {String(current).padStart(2, '0')} / {String(total).padStart(2, '0')}
+      </span>
+    </div>
+  );
+};
+
+// 章節進度條的頁碼區間。增刪、搬移頁面後，必須同步更新這裡的 from / to。
+const CHAPTERS = [
+__CHAPTERS__
+
+const ProgressBar = ({ dark }: { dark?: boolean }) => {
+  const { current } = useSlidePageNumber();
+  if (current === 1) return null;
+  const active = CHAPTERS.findIndex((c) => current >= c.from && current <= c.to);
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        left: 140,
+        right: 140,
+        top: 28,
+        display: 'flex',
+        gap: 14,
+      }}
+    >
+      {CHAPTERS.map((c, i) => {
+        const len = c.to - c.from + 1;
+        const fill = current > c.to ? 1 : current < c.from ? 0 : (current - c.from + 1) / len;
+        const on = i === active;
+        return (
+          <div key={c.name} style={{ flex: len }}>
+            <div
+              style={{
+                fontSize: 24,
+                fontWeight: on ? 700 : 400,
+                color: on ? (dark ? C.gold : 'var(--osd-accent)') : dark ? C.darkMuted : C.muted,
+                marginBottom: 8,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {c.name}
+            </div>
+            <div
+              style={{
+                height: 6,
+                borderRadius: 3,
+                background: dark ? 'rgba(255,255,255,0.22)' : C.line,
+              }}
+            >
+              <div
+                style={{
+                  width: `${fill * 100}%`,
+                  height: '100%',
+                  borderRadius: 3,
+                  background: dark ? C.gold : 'var(--osd-accent)',
+                }}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+const Slide = ({
+  dark,
+  center,
+  children,
+}: {
+  dark?: boolean;
+  center?: boolean;
+  children: ReactNode;
+}) => (
+  <div
+    style={{
+      width: '100%',
+      height: '100%',
+      position: 'relative',
+      overflow: 'hidden',
+      background: dark ? C.dark : 'var(--osd-bg)',
+      color: dark ? C.darkText : 'var(--osd-text)',
+      fontFamily: 'var(--osd-font-body)',
+      padding: '96px 140px 110px',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: center ? 'center' : 'flex-start',
+      WebkitFontSmoothing: 'antialiased',
+    }}
+  >
+    <ProgressBar dark={dark} />
+    {children}
+    <Footer dark={dark} />
+  </div>
+);
+
+const Eyebrow = ({ children, dark }: { children: ReactNode; dark?: boolean }) => (
+  <div
+    style={{
+      fontSize: 30,
+      fontWeight: 700,
+      letterSpacing: '0.12em',
+      color: dark ? C.gold : 'var(--osd-accent)',
+      marginBottom: 20,
+    }}
+  >
+    {children}
+  </div>
+);
+
+const H = ({
+  children,
+  size = 72,
+  dark,
+  style,
+}: {
+  children: ReactNode;
+  size?: number;
+  dark?: boolean;
+  style?: CSSProperties;
+}) => (
+  <h2
+    style={{
+      fontFamily: serif,
+      fontSize: size + 8,
+      fontWeight: 700,
+      lineHeight: 1.25,
+      margin: 0,
+      color: dark ? C.darkText : 'var(--osd-text)',
+      ...style,
+    }}
+  >
+    {children}
+  </h2>
+);
+
+const Tag = ({ children = '延伸建議' }: { children?: ReactNode }) => (
+  <span
+    style={{
+      display: 'inline-block',
+      fontSize: 28,
+      fontWeight: 700,
+      color: 'var(--osd-accent)',
+      border: '2px solid var(--osd-accent)',
+      borderRadius: 999,
+      padding: '2px 16px',
+      marginLeft: 16,
+      verticalAlign: 'middle',
+      letterSpacing: '0.04em',
+    }}
+  >
+    {children}
+  </span>
+);
+
+const Note = ({ children }: { children: ReactNode }) => (
+  <div style={{ fontSize: 30, color: C.muted, marginTop: 28 }}>{children}</div>
+);
+
+// 標題下方的內容區：吃掉剩餘高度並垂直置中，避免頁面下半部留白
+const Body = ({ children, style }: { children: ReactNode; style?: CSSProperties }) => (
+  <div
+    style={{
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      paddingBottom: 16,
+      ...style,
+    }}
+  >
+    {children}
+  </div>
+);
+
+const Card = ({ children, style }: { children: ReactNode; style?: CSSProperties }) => (
+  <div
+    style={{
+      background: C.panel,
+      borderRadius: 'var(--osd-radius)',
+      padding: '32px 40px',
+      ...style,
+    }}
+  >
+    {children}
+  </div>
+);
+
+const Row = ({ n, children }: { n: string; children: ReactNode }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
+    <div
+      style={{
+        flex: 'none',
+        width: 88,
+        height: 88,
+        borderRadius: 999,
+        background: 'var(--osd-accent)',
+        color: C.darkText,
+        fontFamily: serif,
+        fontSize: 48,
+        fontWeight: 700,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      {n}
+    </div>
+    <div style={{ fontSize: 50, lineHeight: 1.45 }}>{children}</div>
+  </div>
+);
+

@@ -1,0 +1,563 @@
+
+/* ---------- 07 專用小元件 ---------- */
+
+const Slot = ({ n, label, hint, hot }: { n: string; label: string; hint?: string; hot?: boolean }) => (
+  <div
+    style={{
+      flex: 1,
+      borderRadius: 'var(--osd-radius)',
+      padding: '28px 22px',
+      background: hot ? C.dark : C.panel,
+      color: hot ? C.darkText : 'var(--osd-text)',
+      textAlign: 'center',
+    }}
+  >
+    <div style={{ fontSize: 30, fontWeight: 700, color: hot ? C.gold : C.muted }}>第 {n} 篇</div>
+    <div style={{ fontFamily: serif, fontSize: 44, fontWeight: 700, margin: '10px 0', whiteSpace: 'nowrap' }}>
+      {label}
+    </div>
+    {hint ? <div style={{ fontSize: 30, color: hot ? C.darkMuted : C.muted }}>{hint}</div> : null}
+  </div>
+);
+
+const ChkRow = ({ children }: { children: ReactNode }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: 28, fontSize: 44, lineHeight: 1.45 }}>
+    <div style={{ flex: 'none', width: 48, height: 48, border: '4px solid var(--osd-accent)', borderRadius: 8 }} />
+    <div>{children}</div>
+  </div>
+);
+
+/* ---------- 開場 ---------- */
+
+const Cover: Page = () => (
+  <Slide center>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ maxWidth: 1150 }}>
+        <Eyebrow>職訓班課程｜餐飲創業</Eyebrow>
+        <h1 style={{ fontFamily: serif, fontSize: 100, fontWeight: 700, lineHeight: 1.25, margin: '0 0 36px' }}>
+          IG 發了一堆甜點照，
+          <br />
+          為什麼還是沒訂單？
+        </h1>
+        <div style={{ fontSize: 46, color: 'var(--osd-accent)', fontWeight: 500 }}>烘焙品牌社群經營 5 大心法</div>
+      </div>
+      <svg width="420" height="420" viewBox="0 0 420 420" aria-hidden="true">
+        {[0, 1, 2].map((r) =>
+          [0, 1, 2].map((c) => (
+            <g key={`${r}-${c}`}>
+              <rect x={c * 140 + 5} y={r * 140 + 5} width="130" height="130" rx="8" fill={C.panel} stroke={C.line} strokeWidth="3" />
+              <circle cx={c * 140 + 70} cy={r * 140 + 72} r="34" fill={(r + c) % 2 ? 'var(--osd-accent)' : C.gold} opacity="0.85" />
+              <circle cx={c * 140 + 70} cy={r * 140 + 72} r="14" fill={C.panel} />
+            </g>
+          )),
+        )}
+      </svg>
+    </div>
+  </Slide>
+);
+
+const Hook: Page = () => (
+  <Slide>
+    <Eyebrow>先投票</Eyebrow>
+    <H size={72}>
+      「我只是想開店，又不是想當網紅」
+      <br />
+      你同意嗎？
+    </H>
+    <Body>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <Vote n="A">同意</Vote>
+        <Vote n="B">不同意</Vote>
+        <Vote n="C">有點矛盾</Vote>
+      </div>
+      <Note>先舉手記下票數，最後一頁再問一次</Note>
+    </Body>
+  </Slide>
+);
+
+const Leverage: Page = () => (
+  <Slide>
+    <Eyebrow>對資金有限的小老闆</Eyebrow>
+    <H size={72}>社群，是 CP 值最高的行銷</H>
+    <Body>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <ChgRow n="1" title="CP 值最高" line="抓到核心，甚至不花 1 塊錢" />
+        <ChgRow n="2" title="最難的是，改變看待社群的方式" line="不是要你當網紅，是學會用社群" />
+        <ChgRow n="3" title="社群的本質是槓桿" line="用得好，就是事業加速器" />
+      </div>
+    </Body>
+  </Slide>
+);
+
+const Trend: Page = () => (
+  <Slide>
+    <Eyebrow>2025 的趨勢</Eyebrow>
+    <H size={72}>消費者追的，不是產品，是人</H>
+    <Body>
+      <div style={{ display: 'flex', gap: 40, alignItems: 'stretch' }}>
+        <Card style={{ flex: 1, padding: '40px 48px' }}>
+          <div style={{ fontSize: 34, fontWeight: 700, color: 'var(--osd-accent)' }}>大家想知道</div>
+          <div style={{ fontSize: 48, lineHeight: 1.7, marginTop: 12 }}>
+            老闆是誰？
+            <br />
+            每天怎麼過？
+            <br />
+            為什麼做這些產品？
+          </div>
+        </Card>
+        <Card style={{ flex: 1, padding: '40px 48px', background: C.dark, color: C.darkText }}>
+          <div style={{ fontSize: 34, fontWeight: 700, color: C.gold }}>餐飲市場</div>
+          <div style={{ fontFamily: serif, fontSize: 54, fontWeight: 700, lineHeight: 1.45, marginTop: 12 }}>
+            不缺好產品，
+            <br />
+            缺的是
+            <br />
+            <span style={{ color: C.gold }}>有人味</span>的產品
+          </div>
+        </Card>
+      </div>
+    </Body>
+  </Slide>
+);
+
+const NotThis: Page = () => (
+  <Slide>
+    <Eyebrow>先講清楚</Eyebrow>
+    <H size={88}>這場不是什麼</H>
+    <Body>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 40, fontSize: 54 }}>
+        <Steps>
+          <Step>
+            <div>
+              <span style={{ color: C.berry, fontWeight: 700, marginRight: 24 }}>✕</span>
+              不是叫你當網紅
+            </div>
+          </Step>
+          <Step>
+            <div>
+              <span style={{ color: C.berry, fontWeight: 700, marginRight: 24 }}>✕</span>
+              不是教你剪片技巧
+            </div>
+          </Step>
+          <Step>
+            <div>
+              <span style={{ color: C.berry, fontWeight: 700, marginRight: 24 }}>✕</span>
+              不是要你搞笑譁眾取寵
+            </div>
+          </Step>
+          <Step>
+            <div
+              style={{
+                marginTop: 20,
+                background: C.panel,
+                borderRadius: 'var(--osd-radius)',
+                padding: '28px 40px',
+                fontWeight: 700,
+              }}
+            >
+              <span style={{ color: 'var(--osd-accent)', marginRight: 24 }}>✓</span>
+              是把想傳達的事，換個方式說出來
+            </div>
+          </Step>
+        </Steps>
+      </div>
+    </Body>
+  </Slide>
+);
+
+const Agenda: Page = () => (
+  <Slide>
+    <Eyebrow>今天的順序</Eyebrow>
+    <H size={88}>5 大心法，分 3 組</H>
+    <Body>
+      <div style={{ display: 'flex', gap: 40 }}>
+        <GroupBox tag="心法 ①" title="有人味" items={['人設是中性詞', '內容比例 1：4']} />
+        <GroupBox tag="心法 ②④" title="被看見" items={['短影片是標配', '一文多貼']} />
+        <GroupBox tag="心法 ③⑤" title="養鐵粉" items={['粉絲要精準', '完成比完美']} />
+      </div>
+    </Body>
+  </Slide>
+);
+
+/* ---------- 第一組：有人味 ---------- */
+
+const Ch1: Page = () => <Chapter no="01" title="有人味" sub="心法 ①" />;
+
+const Persona: Page = () => (
+  <Slide>
+    <Eyebrow>心法 ①・讓顧客認識你</Eyebrow>
+    <H size={72}>人設，是中性詞</H>
+    <Body>
+      <div style={{ fontSize: 42, lineHeight: 1.6 }}>
+        人設不是演戲，是<b style={{ color: 'var(--osd-accent)' }}>你在大眾眼中的樣子</b>。
+        <br />
+        不經營，顧客也會自己決定，不如策略性地設定。
+      </div>
+      <div style={{ display: 'flex', gap: 40, marginTop: 32 }}>
+        <Pair
+          tag="重點 ①"
+          title="人"
+          lines={['老闆、員工', '日常工作的樣子', '比甜點更能創造連結']}
+        />
+        <Pair
+          tag="重點 ②"
+          title="故事"
+          lines={['丟了多少顆蛋，才研發出這款蛋糕', '客人的一句話，改變了你的事業']}
+        />
+      </div>
+    </Body>
+  </Slide>
+);
+
+const Ratio: Page = () => (
+  <Slide>
+    <Eyebrow>心法 ①・內容比例</Eyebrow>
+    <H size={72}>每 5 篇，只有 1 篇賣產品</H>
+    <Body>
+      <div style={{ display: 'flex', gap: 20 }}>
+        <Slot n="1" label="產品" hint="宣傳新品" hot />
+        <Slot n="2" label="工作日常" />
+        <Slot n="3" label="生活趣事" />
+        <Slot n="4" label="老闆價值觀" />
+        <Slot n="5" label="創業心酸" />
+      </div>
+      <div style={{ display: 'flex', gap: 32, marginTop: 40 }}>
+        <Card style={{ flex: 1, padding: '28px 36px' }}>
+          <div style={{ fontSize: 32, fontWeight: 700, color: C.berry }}>每天只發產品照</div>
+          <div style={{ fontSize: 40, marginTop: 8 }}>變成產品目錄，沒人想追蹤</div>
+        </Card>
+        <Card style={{ flex: 1, padding: '28px 36px' }}>
+          <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--osd-accent)' }}>常露臉、講故事</div>
+          <div style={{ fontSize: 40, marginTop: 8 }}>顧客記住「有故事的甜點師傅」</div>
+        </Card>
+      </div>
+    </Body>
+  </Slide>
+);
+
+const Sum1: Page = () => <Summary label="這一組只記一句" line="一半是喜歡，一半是支持你" />;
+
+/* ---------- 第二組：被看見 ---------- */
+
+const Ch2: Page = () => <Chapter no="02" title="被看見" sub="心法 ②④" />;
+
+const Short: Page = () => (
+  <Slide>
+    <Eyebrow>心法 ②・短影片</Eyebrow>
+    <H size={72}>短影片，從選配變標配</H>
+    <Body>
+      <div style={{ display: 'flex', gap: 40 }}>
+        <Card style={{ flex: 1, padding: '40px 48px' }}>
+          <div style={{ fontSize: 34, fontWeight: 700, color: C.muted }}>圖片 ＝ 作品集</div>
+          <div style={{ fontSize: 44, lineHeight: 1.5, marginTop: 12 }}>讓人快速了解品牌調性和商品</div>
+        </Card>
+        <Card style={{ flex: 1, padding: '40px 48px', background: C.dark, color: C.darkText }}>
+          <div style={{ fontSize: 34, fontWeight: 700, color: C.gold }}>短影片 ＝ 拉近距離</div>
+          <div style={{ fontSize: 44, lineHeight: 1.5, marginTop: 12 }}>增加陌生客對你的興趣</div>
+        </Card>
+      </div>
+      <div style={{ fontSize: 40, lineHeight: 1.6, marginTop: 36 }}>
+        FB、IG、YT、TikTok、小紅書，全都在推短影片。
+        <br />
+        沒有粉絲，內容有趣，也有流量。
+      </div>
+    </Body>
+  </Slide>
+);
+
+const Five: Page = () => (
+  <Slide>
+    <Eyebrow>心法 ②・短影片</Eyebrow>
+    <H size={72}>5 個拍攝方向</H>
+    <Body>
+      <div>
+        <T3 cols="190px 1fr 1fr" head a="方向" b="範例標題" c="效果" />
+        <T3 cols="190px 1fr 1fr" a="製作過程" b="60 秒看完一顆巴斯克蛋糕的誕生" c="療癒，比食安認證更讓人安心" />
+        <T3 cols="190px 1fr 1fr" a="老闆的一天" b="甜點工作室的一天" c="不用說，直接讓人看到努力" />
+        <T3 cols="190px 1fr 1fr" a="專業展示" b="只用五種原料能做出幾款麵包？" c="不開口就展現專業" />
+        <T3 cols="190px 1fr 1fr" a="顧客 FAQ" b="5 個讓老闆哭笑不得的顧客問題" c="有趣，又省下回私訊的時間" />
+        <T3 cols="190px 1fr 1fr" a="創業故事" b="那顆蛋糕改變了我的人生" c="最容易拉近距離" />
+      </div>
+    </Body>
+  </Slide>
+);
+
+const Multi: Page = () => (
+  <Slide>
+    <Eyebrow>心法 ④・平台佈局</Eyebrow>
+    <H size={72}>一份內容，貼到多個平台</H>
+    <Body style={{ justifyContent: 'flex-start', paddingTop: 44 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <ChgRow n="F" title="Facebook" line="文字＋圖片" />
+        <ChgRow n="I" title="IG、TikTok" line="拍成短影片" />
+        <ChgRow n="T" title="Threads" line="濃縮成幾句話，附連結導流到 IG" />
+      </div>
+      <div style={{ fontSize: 38, color: C.muted, marginTop: 20, lineHeight: 1.5 }}>
+        單押一個平台，風險太高；同一篇貼文，一年後重貼，效果也不一樣
+      </div>
+    </Body>
+  </Slide>
+);
+
+const Sum2: Page = () => <Summary label="這一組只記一句" line="短影片是標配，內容要多平台貼" />;
+
+/* ---------- 第三組：養鐵粉 ---------- */
+
+const Ch3: Page = () => <Chapter no="03" title="養鐵粉" sub="心法 ③⑤" />;
+
+const Precise: Page = () => (
+  <Slide>
+    <Eyebrow>心法 ③・粉絲要精準</Eyebrow>
+    <H size={72}>追蹤數漂亮，不等於有訂單</H>
+    <Body>
+      <div style={{ display: 'flex', gap: 40 }}>
+        <Card style={{ flex: 1, padding: '40px 48px' }}>
+          <div style={{ fontSize: 34, fontWeight: 700, color: C.berry }}>無效流量</div>
+          <div style={{ fontSize: 42, lineHeight: 1.55, marginTop: 12 }}>
+            每天唱歌跳舞、穿得清涼做甜點，吸來的人，不會花錢買
+          </div>
+        </Card>
+        <Card style={{ flex: 1, padding: '40px 48px', background: C.dark, color: C.darkText }}>
+          <div style={{ fontSize: 34, fontWeight: 700, color: C.gold }}>精準的鐵粉</div>
+          <div style={{ fontSize: 42, lineHeight: 1.55, marginTop: 12 }}>
+            欣賞你的理念、喜歡你的調性，願意花錢支持
+          </div>
+        </Card>
+      </div>
+      <div style={{ fontFamily: serif, fontSize: 48, fontWeight: 700, color: C.berry, marginTop: 40, lineHeight: 1.5 }}>
+        1000 位鐵粉，就能撐起一個烘焙品牌一整年的業績。
+      </div>
+      <Note>1000 位是業界經驗的說法，不是統計</Note>
+    </Body>
+  </Slide>
+);
+
+const Private: Page = () => (
+  <Slide>
+    <Eyebrow>心法 ③・私域經營</Eyebrow>
+    <H size={72}>把粉絲，帶進私域</H>
+    <Body>
+      <div style={{ display: 'flex', gap: 40 }}>
+        <Pair tag="導入哪裡" title="私域社群" lines={['LINE@', 'Discord', '臉書社團']} />
+        <Pair
+          tag="給什麼福利"
+          title="一般社群沒有的"
+          lines={['新品優先試吃', '限量預購', '幕後花絮影片']}
+        />
+      </div>
+      <div style={{ fontFamily: serif, fontSize: 46, fontWeight: 700, color: C.berry, marginTop: 36 }}>
+        鐵粉＝業績基本盤，也是超級業務。
+      </div>
+    </Body>
+  </Slide>
+);
+
+const Done: Page = () => (
+  <Slide>
+    <Eyebrow>心法 ⑤・完成比完美重要</Eyebrow>
+    <H size={72}>先完成，才有可能接近完美</H>
+    <Body>
+      <div style={{ display: 'flex', gap: 40 }}>
+        <Card style={{ flex: 1, padding: '40px 48px' }}>
+          <div style={{ fontSize: 34, fontWeight: 700, color: C.berry }}>最過不去的坎</div>
+          <div style={{ fontSize: 42, lineHeight: 1.55, marginTop: 12 }}>
+            不好意思上鏡頭、不想露臉，<br />怕丟臉。沒做，再好的點子也沒價值。
+          </div>
+        </Card>
+        <Card style={{ flex: 1, padding: '40px 48px', background: C.dark, color: C.darkText }}>
+          <div style={{ fontSize: 34, fontWeight: 700, color: C.gold }}>顧客現在要的</div>
+          <div style={{ fontSize: 42, lineHeight: 1.55, marginTop: 12 }}>
+            對過度精緻的廣告照已經免疫，喜歡<b style={{ color: C.gold }}>真實、不修飾</b>
+          </div>
+        </Card>
+      </div>
+      <div style={{ fontFamily: serif, fontSize: 44, fontWeight: 700, lineHeight: 1.5, marginTop: 36 }}>
+        拍 30 秒：「今天的麵包發酵過頭了，
+        <br />
+        結果意外變成一個新商品。」
+      </div>
+    </Body>
+  </Slide>
+);
+
+const Sum3: Page = () => <Summary label="這一組只記一句" line="粉絲要精準，事情要先完成" />;
+
+/* ---------- 收尾 ---------- */
+
+const Pitfalls: Page = () => (
+  <Slide>
+    <Eyebrow>踩坑分享</Eyebrow>
+    <H size={72}>社群經營，最常卡在這 5 關</H>
+    <Body>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <Flip front="不好意思在鏡頭前講話" back="再好的點子也沒有價值" hint="點一下看後果" h={100} />
+        <Flip front="只發修過的美照" back="變成產品目錄，沒人追蹤" hint="點一下看後果" h={100} />
+        <Flip front="用唱歌跳舞吸流量" back="來的都不是會買的人" hint="點一下看後果" h={100} />
+        <Flip front="只押一個平台" back="演算法一變，流量就沒了" hint="點一下看後果" h={100} />
+        <Flip front="想等一切完美才發" back="一支都沒開始拍" hint="點一下看後果" h={100} />
+      </div>
+    </Body>
+  </Slide>
+);
+
+const Tool: Page = () => (
+  <Slide>
+    <Eyebrow>
+      今天帶走的工具
+      <Tag />
+    </Eyebrow>
+    <H size={72}>一週內容排程表（1：4）</H>
+    <Body>
+      <div style={{ display: 'flex', gap: 18 }}>
+        <Slot n="1" label="產品" hint="宣傳新品" hot />
+        <Slot n="2" label="＿＿＿" hint="日常" />
+        <Slot n="3" label="＿＿＿" hint="趣事" />
+        <Slot n="4" label="＿＿＿" hint="價值觀" />
+        <Slot n="5" label="＿＿＿" hint="創業故事" />
+      </div>
+      <div style={{ fontSize: 42, lineHeight: 1.6, marginTop: 40 }}>
+        下週的 5 篇，各寫下一個主題。
+        <br />
+        4 篇不賣產品，只讓人認識你。
+      </div>
+    </Body>
+  </Slide>
+);
+
+const Funnel: Page = () => (
+  <Slide>
+    <Eyebrow>預期的成果</Eyebrow>
+    <H size={72}>從陌生人，到鐵粉</H>
+    <Body>
+      <div style={{ display: 'flex', gap: 64, alignItems: 'center' }}>
+        <svg width="720" height="460" viewBox="0 0 720 460" aria-hidden="true">
+          <polygon points="0,0 720,0 660,100 60,100" fill={C.line} />
+          <polygon points="60,110 660,110 600,210 120,210" fill={C.darkMuted} />
+          <polygon points="120,220 600,220 540,320 180,320" fill="var(--osd-accent)" />
+          <polygon points="180,330 540,330 480,430 240,430" fill={C.dark} />
+          <text x="360" y="64" textAnchor="middle" fontSize="44" fontWeight="700" fill={C.dark}>發現你</text>
+          <text x="360" y="174" textAnchor="middle" fontSize="44" fontWeight="700" fill={C.dark}>認識你</text>
+          <text x="360" y="284" textAnchor="middle" fontSize="44" fontWeight="700" fill={C.darkText}>喜歡你</text>
+          <text x="360" y="394" textAnchor="middle" fontSize="40" fontWeight="700" fill={C.darkText}>愛上你的品牌</text>
+        </svg>
+        <div style={{ fontSize: 42, lineHeight: 1.65 }}>
+          社群存在的目的：<b style={{ color: 'var(--osd-accent)' }}>建立信任</b>
+          <div style={{ marginTop: 16 }}>累積 1000 位鐵粉，<br />品牌就在市場佔有一席之地</div>
+          <div style={{ marginTop: 16, color: C.muted }}>拍 5 支、10 支，越做越上手</div>
+        </div>
+      </div>
+    </Body>
+  </Slide>
+);
+
+const DiscussQA: Page = () => (
+  <Slide>
+    <Eyebrow>行動挑戰＋ Q&amp;A</Eyebrow>
+    <H size={72}>先動手 3 分鐘，再來問答</H>
+    <Body>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 36 }}>
+        <Row n="1">用 1：4，排出下週的 5 篇內容主題</Row>
+        <Row n="2">從 5 個方向挑 1 個，寫 30～60 秒的分鏡</Row>
+        <Row n="3">「只想開店，不想當網紅」，你現在還同意嗎？</Row>
+      </div>
+      <div style={{ fontFamily: serif, fontSize: 64, fontWeight: 700, color: 'var(--osd-accent)', marginTop: 56 }}>
+        Q&amp;A　有問題，現在問
+      </div>
+    </Body>
+  </Slide>
+);
+
+const TakeAway: Page = () => (
+  <Slide>
+    <Eyebrow>今天帶走的三樣</Eyebrow>
+    <H size={72}>一個觀念、一個工具、一個行動</H>
+    <Body>
+      <div style={{ display: 'flex', gap: 36 }}>
+        <Col tag="觀念" title="顧客追的是人" body={'不是產品\n是有人味的你'} />
+        <Col tag="工具" title="1：4 排程表" body={'5 篇裡\n只有 1 篇賣產品'} />
+        <Col tag="行動" title="拍第一支短影片" body={'30～60 秒\n先完成再完美'} />
+      </div>
+    </Body>
+  </Slide>
+);
+
+const Closing: Page = () => (
+  <Slide dark center>
+    <div style={{ fontSize: 32, color: C.gold, letterSpacing: '0.12em', fontWeight: 700 }}>
+      最後一句話
+    </div>
+    <H size={104} dark style={{ marginTop: 32, lineHeight: 1.35 }}>
+      最困難的事，
+      <br />
+      是還沒開始做的那一件。
+    </H>
+    <div style={{ fontSize: 40, color: C.darkMuted, marginTop: 48, lineHeight: 1.6 }}>
+      再問一次：「我只是想開店，又不是想當網紅」，你還同意嗎？
+      <br />
+      <span style={{ color: C.gold }}>A 同意　B 不同意　C 有點矛盾</span>
+    </div>
+  </Slide>
+);
+
+export const notes: (string | undefined)[] = [
+  '歡迎大家。今天的標題很多人有共鳴：IG 發了一堆甜點照，為什麼還是沒訂單？我們來看 2025 年烘焙品牌經營社群的五大心法。',
+  '先請大家投票。「我只是想開店做生意，又不是想當網紅」，你同意嗎？A 同意、B 不同意、C 有點矛盾。記下票數，最後一頁再問一次。',
+  '對白手起家、資金有限的小老闆來說，自媒體是 CP 值最高的行銷，抓到核心價值，甚至不花一塊錢就能帶來訂單。最難的是改變你看待社群的方式。社群的本質是槓桿，用得好，就是事業加速器。',
+  '2025 年的趨勢：消費者追的不是產品，而是人。大家想知道老闆是誰、每天怎麼過、為什麼做這些產品。餐飲市場不缺好產品，缺的是有人味的產品。',
+  '先講清楚這場不是什麼：不是叫你當網紅、不是教你剪片技巧、也不是要你搞笑譁眾取寵。是把你想傳達的事，換個方式說出來。',
+  '五大心法分三組：有人味，是人設和內容比例；被看見，是短影片和一文多貼；養鐵粉，是粉絲要精準，和完成比完美重要。',
+  undefined,
+  '心法一：讓顧客認識你，比認識產品更重要。一聽到人設，很多人覺得是假的、要演的，但人設是中性詞，就是你在大眾眼中的樣子。不管你經不經營，顧客看到你的瞬間，就已經決定了你的人設，不如策略性地設定。兩個重點：一是人，老闆、員工、日常工作的樣子，比甜點更能創造連結；二是故事，例如丟了多少顆蛋才研發出這款蛋糕，或客人的一句話改變了你的事業。',
+  '內容比例，廣告對非廣告是一比四。每五篇只有一篇宣傳新品，其他四篇分享工作日常、生活趣事、老闆的價值觀和創業心酸。每天只發產品照，社群會變成產品目錄；常常露臉、講故事，顧客會記住那個有故事的甜點師傅。',
+  '第一組只記一句：顧客買你的商品，一半是因為喜歡，另一半是想支持一個他認同的人。',
+  undefined,
+  '心法二：短影片是標配。2024 年前，有能力可以試著拍；到了今年，短影片已是標配。FB、IG、YT、TikTok、小紅書全都在大推短影片，沒有粉絲，內容有趣也有流量。圖片只能當作品集，讓人了解調性和商品；要拉近陌生顧客的距離，靠短影片。',
+  '短影片拍什麼？五個方向。製作過程：60 秒看完一顆巴斯克蛋糕的誕生，比貼食安認證更讓人安心。老闆的一天：直接讓人看到你的努力。專業展示：只用五種原料能做出幾款麵包，不開口就展現專業。顧客 FAQ：五個讓老闆哭笑不得的顧客問題，有趣又省下回私訊的時間。創業故事：那顆蛋糕改變了我的人生，最容易拉近距離。拍短影片不是搞笑，是把想傳達的訊息包裝一下。',
+  '心法四：一文多貼。2025 年單押一個平台，風險太高，演算法隨時會變。同一份內容，文字加圖片發 Facebook，拍成短影片發 IG 和 TikTok，濃縮成幾句話加連結發 Threads，把人導到 IG。同一篇貼文一年後重貼，效果也會不一樣。',
+  '第二組只記一句：短影片是標配，內容要多平台貼。',
+  undefined,
+  '心法三：粉絲要精準，不是要多。追蹤數漂亮，不等於有訂單。每天唱歌跳舞、穿得清涼做甜點，吸來的人不會花錢買。真正帶來口碑和營收的，是欣賞你理念、願意花錢支持你的鐵粉。累積 1000 位鐵粉，就能撐起一個烘焙品牌一整年的業績，這是業界經驗的說法，不是統計。',
+  '怎麼養鐵粉？把粉絲導入私域，例如 LINE@、Discord、臉書社團，提供一般社群沒有的福利：新品優先試吃、限量預購、幕後花絮影片。這些鐵粉是業績基本盤，還會成為超級業務。',
+  '心法五：完成比完美重要。最多職人老闆過不去的坎，是不好意思在鏡頭前講話、不想露臉、怕丟臉，結果遲遲不開始，再好的點子都沒價值。要先完成，才有可能接近完美。現在的消費者對過度精緻的廣告照已經免疫，喜歡真實。與其花時間修圖擺盤，不如拍 30 秒：今天的麵包發酵過頭了，結果意外變成一個新商品。',
+  '第三組只記一句：粉絲要精準，事情要先完成。',
+  '社群經營最常卡的五關，是翻牌卡，請同學先猜後果再翻。注意：要按 F 進播放模式才點得動。最後一個，想等一切完美才發，是我們整理的延伸。',
+  '今天帶走的工具：一週內容排程表。第一篇賣產品，其他四篇是日常、趣事、價值觀和創業故事。這張表是我們整理的延伸，請大家抄下來，各寫下一個主題。',
+  '社群經營的過程，就是讓人發現你、認識你、喜歡你，最後愛上你的品牌。社群存在的目的，是建立信任。累積 1000 位鐵粉，品牌就在市場佔有一席之地。拍個五支、十支，你會發現越做越上手。',
+  '請大家先動手三分鐘。第一題，用一比四排下週五篇內容；第二題，從五個方向挑一個，寫 30 到 60 秒的分鏡；第三題，回到開場的問題。接著開放問答。',
+  '帶走三樣：一個觀念，顧客追的是人，不是產品；一個工具，一比四排程表；一個行動，拍第一支短影片，先完成再完美。',
+  '最後一句話：最困難的事，是還沒開始做的那一件。現在再舉一次手：「我只是想開店，又不是想當網紅」，你還同意嗎？看看和一開始比，有沒有改變。老闆們加油。謝謝大家。',
+];
+
+export const meta: SlideMeta = {
+  title: 'IG 發了一堆甜點照，為什麼還是沒訂單？',
+  createdAt: '__CREATED__',
+};
+
+export default [
+  Cover,
+  Hook,
+  Leverage,
+  Trend,
+  NotThis,
+  Agenda,
+  Ch1,
+  Persona,
+  Ratio,
+  Sum1,
+  Ch2,
+  Short,
+  Five,
+  Multi,
+  Sum2,
+  Ch3,
+  Precise,
+  Private,
+  Done,
+  Sum3,
+  Pitfalls,
+  Tool,
+  Funnel,
+  DiscussQA,
+  TakeAway,
+  Closing,
+] satisfies Page[];

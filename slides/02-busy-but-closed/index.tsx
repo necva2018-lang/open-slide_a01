@@ -1,0 +1,1155 @@
+import {
+  type DesignSystem,
+  type Page,
+  type SlideMeta,
+  Step,
+  Steps,
+  useSlidePageNumber,
+} from '@open-slide/core';
+import { type CSSProperties, type ReactNode, useState } from 'react';
+
+export const design: DesignSystem = {
+  palette: { bg: '#f5f4e8', text: '#232b1c', accent: '#4a6b2d' },
+  fonts: {
+    display: '"Noto Serif TC", "Source Han Serif TC", "PMingLiU", "Songti TC", serif',
+    body: '"Noto Sans TC", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif',
+  },
+  typeScale: { hero: 150, body: 40 },
+  radius: 20,
+};
+
+// 額外色票（不在 DesignSystem 範圍內）
+const C = {
+  muted: '#596250',
+  line: '#dcdcc4',
+  panel: '#e9e8d2',
+  berry: '#b5471f',
+  dark: '#1f2a17',
+  darkText: '#f5f4e8',
+  darkMuted: '#c6cdb2',
+  gold: '#e0b84f',
+};
+
+const FONT_HREF =
+  'https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700&family=Noto+Sans+TC:wght@400;500;700&display=swap';
+const FONT_LINK_ID = 'osd-webfont-02-busy-but-closed';
+if (typeof document !== 'undefined') {
+  let link = document.getElementById(FONT_LINK_ID) as HTMLLinkElement | null;
+  if (!link) {
+    link = document.createElement('link');
+    link.id = FONT_LINK_ID;
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+  }
+  if (link.href !== FONT_HREF) link.href = FONT_HREF;
+}
+
+const serif = 'var(--osd-font-display)';
+
+/* ---------- 共用元件 ---------- */
+
+const Footer = ({ dark }: { dark?: boolean }) => {
+  const { current, total } = useSlidePageNumber();
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        left: 140,
+        right: 140,
+        bottom: 40,
+        display: 'flex',
+        justifyContent: 'space-between',
+        fontSize: 24,
+        color: dark ? C.darkMuted : C.muted,
+      }}
+    >
+      <span>生意超好，為什麼還會倒？</span>
+      <span>
+        {String(current).padStart(2, '0')} / {String(total).padStart(2, '0')}
+      </span>
+    </div>
+  );
+};
+
+// 章節進度條的頁碼區間。增刪、搬移頁面後，必須同步更新這裡的 from / to。
+const CHAPTERS = [
+  { name: '開場', from: 1, to: 5 },
+  { name: '現金流卡死', from: 6, to: 10 },
+  { name: '利潤失準', from: 11, to: 15 },
+  { name: '外部與老闆', from: 16, to: 19 },
+  { name: '收尾', from: 20, to: 25 },
+];
+
+const ProgressBar = ({ dark }: { dark?: boolean }) => {
+  const { current } = useSlidePageNumber();
+  if (current === 1) return null;
+  const active = CHAPTERS.findIndex((c) => current >= c.from && current <= c.to);
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        left: 140,
+        right: 140,
+        top: 28,
+        display: 'flex',
+        gap: 14,
+      }}
+    >
+      {CHAPTERS.map((c, i) => {
+        const len = c.to - c.from + 1;
+        const fill = current > c.to ? 1 : current < c.from ? 0 : (current - c.from + 1) / len;
+        const on = i === active;
+        return (
+          <div key={c.name} style={{ flex: len }}>
+            <div
+              style={{
+                fontSize: 24,
+                fontWeight: on ? 700 : 400,
+                color: on ? (dark ? C.gold : 'var(--osd-accent)') : dark ? C.darkMuted : C.muted,
+                marginBottom: 8,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {c.name}
+            </div>
+            <div
+              style={{
+                height: 6,
+                borderRadius: 3,
+                background: dark ? 'rgba(255,255,255,0.22)' : C.line,
+              }}
+            >
+              <div
+                style={{
+                  width: `${fill * 100}%`,
+                  height: '100%',
+                  borderRadius: 3,
+                  background: dark ? C.gold : 'var(--osd-accent)',
+                }}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+const Slide = ({
+  dark,
+  center,
+  children,
+}: {
+  dark?: boolean;
+  center?: boolean;
+  children: ReactNode;
+}) => (
+  <div
+    style={{
+      width: '100%',
+      height: '100%',
+      position: 'relative',
+      overflow: 'hidden',
+      background: dark ? C.dark : 'var(--osd-bg)',
+      color: dark ? C.darkText : 'var(--osd-text)',
+      fontFamily: 'var(--osd-font-body)',
+      padding: '96px 140px 110px',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: center ? 'center' : 'flex-start',
+      WebkitFontSmoothing: 'antialiased',
+    }}
+  >
+    <ProgressBar dark={dark} />
+    {children}
+    <Footer dark={dark} />
+  </div>
+);
+
+const Eyebrow = ({ children, dark }: { children: ReactNode; dark?: boolean }) => (
+  <div
+    style={{
+      fontSize: 30,
+      fontWeight: 700,
+      letterSpacing: '0.12em',
+      color: dark ? C.gold : 'var(--osd-accent)',
+      marginBottom: 20,
+    }}
+  >
+    {children}
+  </div>
+);
+
+const H = ({
+  children,
+  size = 72,
+  dark,
+  style,
+}: {
+  children: ReactNode;
+  size?: number;
+  dark?: boolean;
+  style?: CSSProperties;
+}) => (
+  <h2
+    style={{
+      fontFamily: serif,
+      fontSize: size + 8,
+      fontWeight: 700,
+      lineHeight: 1.25,
+      margin: 0,
+      color: dark ? C.darkText : 'var(--osd-text)',
+      ...style,
+    }}
+  >
+    {children}
+  </h2>
+);
+
+const Tag = ({ children = '延伸建議' }: { children?: ReactNode }) => (
+  <span
+    style={{
+      display: 'inline-block',
+      fontSize: 28,
+      fontWeight: 700,
+      color: 'var(--osd-accent)',
+      border: '2px solid var(--osd-accent)',
+      borderRadius: 999,
+      padding: '2px 16px',
+      marginLeft: 16,
+      verticalAlign: 'middle',
+      letterSpacing: '0.04em',
+    }}
+  >
+    {children}
+  </span>
+);
+
+const Note = ({ children }: { children: ReactNode }) => (
+  <div style={{ fontSize: 30, color: C.muted, marginTop: 28 }}>{children}</div>
+);
+
+// 標題下方的內容區：吃掉剩餘高度並垂直置中，避免頁面下半部留白
+const Body = ({ children, style }: { children: ReactNode; style?: CSSProperties }) => (
+  <div
+    style={{
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      paddingBottom: 16,
+      ...style,
+    }}
+  >
+    {children}
+  </div>
+);
+
+const Card = ({ children, style }: { children: ReactNode; style?: CSSProperties }) => (
+  <div
+    style={{
+      background: C.panel,
+      borderRadius: 'var(--osd-radius)',
+      padding: '32px 40px',
+      ...style,
+    }}
+  >
+    {children}
+  </div>
+);
+
+const Row = ({ n, children }: { n: string; children: ReactNode }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
+    <div
+      style={{
+        flex: 'none',
+        width: 88,
+        height: 88,
+        borderRadius: 999,
+        background: 'var(--osd-accent)',
+        color: C.darkText,
+        fontFamily: serif,
+        fontSize: 48,
+        fontWeight: 700,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      {n}
+    </div>
+    <div style={{ fontSize: 50, lineHeight: 1.45 }}>{children}</div>
+  </div>
+);
+
+
+/* ---------- 共用頁面零件（所有簡報相同） ---------- */
+
+const GroupBox = ({ tag, title, items }: { tag: string; title: string; items: string[] }) => (
+  <div
+    style={{
+      flex: 1,
+      background: C.panel,
+      borderRadius: 'var(--osd-radius)',
+      padding: '44px 36px',
+    }}
+  >
+    <div
+      style={{ fontSize: 34, fontWeight: 700, color: 'var(--osd-accent)', letterSpacing: '0.1em' }}
+    >
+      {tag}
+    </div>
+    <div style={{ fontFamily: serif, fontSize: 64, fontWeight: 700, margin: '12px 0 28px' }}>
+      {title}
+    </div>
+    {items.map((t) => (
+      <div key={t} style={{ fontSize: 40, lineHeight: 1.6, whiteSpace: 'nowrap' }}>
+        {t}
+      </div>
+    ))}
+  </div>
+);
+
+const Chapter = ({ no, title, sub }: { no: string; title: string; sub: string }) => (
+  <Slide center>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 80 }}>
+      <div
+        style={{
+          fontFamily: serif,
+          fontSize: 300,
+          fontWeight: 700,
+          lineHeight: 1,
+          color: 'var(--osd-accent)',
+        }}
+      >
+        {no}
+      </div>
+      <div>
+        <H size={112}>{title}</H>
+        <div style={{ fontSize: 44, color: C.muted, marginTop: 24 }}>{sub}</div>
+      </div>
+    </div>
+  </Slide>
+);
+
+const Summary = ({ label, line }: { label: string; line: string }) => (
+  <Slide dark center>
+    <div style={{ fontSize: 32, color: C.gold, letterSpacing: '0.12em', fontWeight: 700 }}>
+      {label}
+    </div>
+    <H size={104} dark style={{ marginTop: 28, lineHeight: 1.3 }}>
+      {line}
+    </H>
+  </Slide>
+);
+
+const Q = ({ n, children }: { n: string; children: ReactNode }) => (
+  <Card style={{ display: 'flex', alignItems: 'center', gap: 28, padding: '44px 40px' }}>
+    <div style={{ fontFamily: serif, fontSize: 88, fontWeight: 700, color: 'var(--osd-accent)' }}>
+      {n}
+    </div>
+    <div style={{ fontSize: 46, lineHeight: 1.4 }}>{children}</div>
+  </Card>
+);
+
+const Col = ({ tag, title, body }: { tag: string; title: string; body: string }) => (
+  <div
+    style={{
+      flex: 1,
+      background: C.panel,
+      borderRadius: 'var(--osd-radius)',
+      padding: '52px 40px',
+    }}
+  >
+    <div
+      style={{
+        fontFamily: serif,
+        fontSize: 44,
+        fontWeight: 700,
+        color: C.darkText,
+        background: 'var(--osd-accent)',
+        display: 'inline-block',
+        padding: '4px 28px',
+        borderRadius: 999,
+      }}
+    >
+      {tag}
+    </div>
+    <div
+      style={{
+        fontFamily: serif,
+        fontSize: 58,
+        fontWeight: 700,
+        margin: '32px 0 20px',
+        lineHeight: 1.3,
+      }}
+    >
+      {title}
+    </div>
+    <div style={{ fontSize: 40, lineHeight: 1.6, color: C.muted, whiteSpace: 'pre-line' }}>
+      {body}
+    </div>
+  </div>
+);
+
+const TRow = ({ who, how, last }: { who: string; how: string; last?: boolean }) => (
+  <div
+    style={{
+      display: 'flex',
+      gap: 48,
+      padding: '28px 0',
+      borderBottom: last ? 'none' : `2px solid ${C.line}`,
+      fontSize: 42,
+      lineHeight: 1.45,
+    }}
+  >
+    <div style={{ flex: '0 0 480px', fontWeight: 700, color: 'var(--osd-accent)' }}>{who}</div>
+    <div style={{ flex: 1 }}>{how}</div>
+  </div>
+);
+
+// 翻牌卡：點一下，以 3D 旋轉翻到背面（需在播放模式 F 才點得動）
+const FACE: CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  display: 'flex',
+  alignItems: 'center',
+  gap: 32,
+  padding: '0 44px',
+  borderRadius: 'var(--osd-radius)',
+  fontSize: 44,
+  backfaceVisibility: 'hidden',
+  WebkitBackfaceVisibility: 'hidden',
+};
+
+const Flip = ({
+  front,
+  back,
+  hint = '點一下看答案',
+  h = 128,
+}: {
+  front: string;
+  back: string;
+  hint?: string;
+  h?: number;
+}) => {
+  const [flipped, setFlipped] = useState(false);
+  return (
+    <div
+      data-osd-interactive
+      onClick={() => setFlipped((f) => !f)}
+      style={{ perspective: 1400, cursor: 'pointer', height: h }}
+    >
+      <div
+        style={{
+          position: 'relative',
+          width: '100%',
+          height: '100%',
+          transformStyle: 'preserve-3d',
+          transition: 'transform 600ms cubic-bezier(0.22, 1, 0.36, 1)',
+          transform: flipped ? 'rotateX(180deg)' : 'rotateX(0deg)',
+        }}
+      >
+        <div style={{ ...FACE, background: C.panel }}>
+          <div style={{ flex: 1, fontWeight: 700 }}>{front}</div>
+          <div style={{ fontSize: 30, color: C.muted }}>{hint}</div>
+        </div>
+        <div
+          style={{
+            ...FACE,
+            background: C.dark,
+            color: C.darkText,
+            transform: 'rotateX(180deg)',
+          }}
+        >
+          <div style={{ flex: '0 0 700px', fontWeight: 700 }}>{front}</div>
+          <div style={{ color: C.gold, fontSize: 52 }}>→</div>
+          <div style={{ flex: 1 }}>{back}</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const Chip = ({ children, strong }: { children: ReactNode; strong?: boolean }) => (
+  <div
+    style={{
+      background: strong ? C.dark : C.panel,
+      color: strong ? C.darkText : 'var(--osd-text)',
+      borderRadius: 999,
+      padding: '14px 36px',
+      fontSize: 42,
+      fontWeight: 700,
+      whiteSpace: 'nowrap',
+    }}
+  >
+    {children}
+  </div>
+);
+
+const Arrow = () => <div style={{ fontSize: 44, color: 'var(--osd-accent)' }}>→</div>;
+
+
+
+/* ---------- 02 專用小元件 ---------- */
+
+const RiskPrev = ({ risks, fixes }: { risks: string[]; fixes: string[] }) => (
+  <div style={{ display: 'flex', gap: 40 }}>
+    <Card style={{ flex: 1.1, padding: '44px 48px' }}>
+      <div style={{ fontSize: 36, fontWeight: 700, color: C.berry, marginBottom: 20 }}>風險</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 18, fontSize: 42, lineHeight: 1.5 }}>
+        {risks.map((t) => (
+          <div key={t}>{t}</div>
+        ))}
+      </div>
+    </Card>
+    <Card style={{ flex: 1, padding: '44px 48px', background: C.dark, color: C.darkText }}>
+      <div style={{ fontSize: 36, fontWeight: 700, color: C.gold, marginBottom: 20 }}>
+        預防做法
+        <span
+          style={{
+            display: 'inline-block',
+            fontSize: 28,
+            border: `2px solid ${C.gold}`,
+            borderRadius: 999,
+            padding: '2px 16px',
+            marginLeft: 16,
+            verticalAlign: 'middle',
+          }}
+        >
+          延伸建議
+        </span>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 18, fontSize: 42, lineHeight: 1.5 }}>
+        {fixes.map((t) => (
+          <div key={t}>{t}</div>
+        ))}
+      </div>
+    </Card>
+  </div>
+);
+
+const RiskCard = ({
+  tag,
+  title,
+  risks,
+  fixes,
+}: {
+  tag: string;
+  title: string;
+  risks: string[];
+  fixes: string[];
+}) => (
+  <Card style={{ flex: 1, padding: '40px 44px' }}>
+    <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--osd-accent)', letterSpacing: '0.08em' }}>
+      {tag}
+    </div>
+    <div style={{ fontFamily: serif, fontSize: 52, fontWeight: 700, margin: '8px 0 20px', lineHeight: 1.3 }}>
+      {title}
+    </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 38, lineHeight: 1.45 }}>
+      {risks.map((t) => (
+        <div key={t}>{t}</div>
+      ))}
+    </div>
+    <div style={{ borderTop: `2px solid ${C.line}`, margin: '22px 0 18px' }} />
+    <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--osd-accent)', marginBottom: 8 }}>
+      預防
+      <Tag />
+    </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 38, lineHeight: 1.45 }}>
+      {fixes.map((t) => (
+        <div key={t}>{t}</div>
+      ))}
+    </div>
+  </Card>
+);
+
+const ChkRow = ({ children }: { children: ReactNode }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: 28, fontSize: 44, lineHeight: 1.45 }}>
+    <div
+      style={{
+        flex: 'none',
+        width: 48,
+        height: 48,
+        border: '4px solid var(--osd-accent)',
+        borderRadius: 8,
+      }}
+    />
+    <div>{children}</div>
+  </div>
+);
+
+const Step2 = ({ n, children }: { n: string; children: ReactNode }) => (
+  <div
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 28,
+      background: C.panel,
+      borderRadius: 'var(--osd-radius)',
+      padding: '14px 36px',
+      fontSize: 42,
+    }}
+  >
+    <div style={{ fontFamily: serif, fontSize: 52, fontWeight: 700, color: 'var(--osd-accent)' }}>{n}</div>
+    <div style={{ lineHeight: 1.4 }}>{children}</div>
+  </div>
+);
+
+const SizeTile = ({
+  name,
+  line,
+  danger,
+}: {
+  name: string;
+  line: string;
+  danger?: boolean;
+}) => (
+  <div
+    style={{
+      flex: 1,
+      borderRadius: 'var(--osd-radius)',
+      padding: '40px 36px',
+      background: danger ? C.berry : C.panel,
+      color: danger ? C.darkText : 'var(--osd-text)',
+    }}
+  >
+    <div style={{ fontFamily: serif, fontSize: 64, fontWeight: 700 }}>{name}</div>
+    <div style={{ fontSize: 40, lineHeight: 1.5, marginTop: 12 }}>{line}</div>
+  </div>
+);
+
+/* ---------- 開場 ---------- */
+
+const Cover: Page = () => (
+  <Slide center>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ maxWidth: 1100 }}>
+        <Eyebrow>職訓班課程｜餐飲創業</Eyebrow>
+        <h1
+          style={{
+            fontFamily: serif,
+            fontSize: 128,
+            fontWeight: 700,
+            lineHeight: 1.2,
+            margin: '0 0 40px',
+          }}
+        >
+          生意超好，
+          <br />
+          為什麼還會倒？
+        </h1>
+        <div style={{ fontSize: 48, color: 'var(--osd-accent)', fontWeight: 500 }}>
+          10 個「賺錢卻倒閉」的原因
+        </div>
+      </div>
+      <svg width="560" height="440" viewBox="0 0 560 440" aria-hidden="true">
+        <rect x="30" y="110" width="270" height="280" fill={C.panel} stroke={C.muted} strokeWidth="5" />
+        <path d="M14 110 L34 40 H296 L316 110 Z" fill="var(--osd-accent)" />
+        <path d="M95 40 L87 110 M165 40 L160 110 M235 40 L233 110" stroke={C.panel} strokeWidth="12" />
+        <rect x="190" y="170" width="90" height="220" fill={C.dark} />
+        <line x1="60" y1="170" x2="60" y2="215" stroke={C.muted} strokeWidth="4" />
+        <line x1="150" y1="170" x2="150" y2="215" stroke={C.muted} strokeWidth="4" />
+        <rect x="40" y="215" width="130" height="62" rx="6" fill={C.berry} />
+        <text x="105" y="258" textAnchor="middle" fontSize="32" fontWeight="700" fill={C.darkText}>
+          暫停營業
+        </text>
+        <line x1="20" y1="390" x2="540" y2="390" stroke={C.muted} strokeWidth="5" />
+        {[350, 410, 470, 530].map((x) => (
+          <g key={x}>
+            <circle cx={x} cy="300" r="20" fill="var(--osd-accent)" />
+            <rect x={x - 20} y="324" width="40" height="66" rx="18" fill="var(--osd-accent)" />
+          </g>
+        ))}
+      </svg>
+    </div>
+  </Slide>
+);
+
+const Hook: Page = () => (
+  <Slide>
+    <Eyebrow>先舉手</Eyebrow>
+    <H size={80}>生意很好的店，會突然倒閉嗎？</H>
+    <Body>
+      <div style={{ display: 'flex', gap: 32 }}>
+        <div style={{ flex: 1 }}>
+          <Q n="A">不太可能</Q>
+        </div>
+        <div style={{ flex: 1 }}>
+          <Q n="B">有可能</Q>
+        </div>
+        <div style={{ flex: 1 }}>
+          <Q n="C">很常見</Q>
+        </div>
+      </div>
+      <Note>先舉手記下票數，最後一頁再問一次</Note>
+    </Body>
+  </Slide>
+);
+
+const Intro: Page = () => (
+  <Slide>
+    <Eyebrow>從業界一件事說起</Eyebrow>
+    <H size={72}>看起來生意很好，卻突然倒下</H>
+    <Body>
+      <div style={{ display: 'flex', gap: 48, alignItems: 'stretch' }}>
+        <Card style={{ flex: 1, padding: '44px 48px' }}>
+          <div style={{ fontSize: 36, fontWeight: 700, color: C.muted }}>外人看到的</div>
+          <div style={{ fontFamily: serif, fontSize: 54, fontWeight: 700, margin: '12px 0', lineHeight: 1.35 }}>
+            網路十幾萬粉絲
+            <br />
+            生意看起來不錯
+          </div>
+        </Card>
+        <Card style={{ flex: 1, padding: '44px 48px', background: C.dark, color: C.darkText }}>
+          <div style={{ fontSize: 36, fontWeight: 700, color: C.darkMuted }}>後來的結果</div>
+          <div style={{ fontFamily: serif, fontSize: 54, fontWeight: 700, margin: '12px 0', lineHeight: 1.35 }}>
+            棄單
+            <br />
+            貨款跳票
+          </div>
+        </Card>
+      </div>
+      <div style={{ fontSize: 44, lineHeight: 1.6, marginTop: 44 }}>
+        我們不評論個案，只問：
+        <b style={{ color: C.berry }}>哪些情況，會讓生意好的店突然倒下？</b>
+      </div>
+      <Note>雖然以甜點店為例，適用多數餐飲業</Note>
+    </Body>
+  </Slide>
+);
+
+const NotThis: Page = () => (
+  <Slide>
+    <Eyebrow>先講清楚</Eyebrow>
+    <H size={88}>這場不是什麼</H>
+    <Body>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 40, fontSize: 54 }}>
+        <Steps>
+          <Step>
+            <div>
+              <span style={{ color: C.berry, fontWeight: 700, marginRight: 24 }}>✕</span>
+              不評論任何個案
+            </div>
+          </Step>
+          <Step>
+            <div>
+              <span style={{ color: C.berry, fontWeight: 700, marginRight: 24 }}>✕</span>
+              不是教你別賺錢
+            </div>
+          </Step>
+          <Step>
+            <div>
+              <span style={{ color: C.berry, fontWeight: 700, marginRight: 24 }}>✕</span>
+              不是只有甜點店才會遇到
+            </div>
+          </Step>
+          <Step>
+            <div
+              style={{
+                marginTop: 20,
+                background: C.panel,
+                borderRadius: 'var(--osd-radius)',
+                padding: '28px 40px',
+                fontWeight: 700,
+              }}
+            >
+              <span style={{ color: 'var(--osd-accent)', marginRight: 24 }}>✓</span>
+              是從經營者角度，看生意好時的風險
+            </div>
+          </Step>
+        </Steps>
+      </div>
+    </Body>
+  </Slide>
+);
+
+const Agenda: Page = () => (
+  <Slide>
+    <Eyebrow>今天的順序</Eyebrow>
+    <H size={80}>10 個原因，分 4 類</H>
+    <Body>
+      <div style={{ display: 'flex', gap: 28 }}>
+        <GroupBox tag="第一類" title="現金流" items={['預收款提早花完', '盲目擴張', '員工集體離職']} />
+        <GroupBox tag="第二類" title="利潤" items={['利潤率過低', '錯估成本', '中型規模死循環']} />
+        <GroupBox tag="第三類" title="外部關係" items={['員工投訴', '鄰居投訴', '房東']} />
+        <GroupBox tag="第四類" title="老闆本身" items={['老闆堅持自己來']} />
+      </div>
+      <div style={{ fontSize: 42, fontWeight: 700, color: C.berry, marginTop: 40 }}>
+        這 10 個原因，都只有生意好的時候才會發生
+      </div>
+    </Body>
+  </Slide>
+);
+
+/* ---------- 第一類：現金流卡死 ---------- */
+
+const Ch1: Page = () => <Chapter no="01" title="現金流卡死" sub="原因 ①～③" />;
+
+const Cause1: Page = () => (
+  <Slide>
+    <Eyebrow>原因 ①</Eyebrow>
+    <H size={72}>預收款提早花完</H>
+    <Body>
+      <RiskPrev
+        risks={['禮盒、生日蛋糕先收錢', '老闆以為「現金超多」', '挪去別處，甚至匯進私人帳戶', '沒新預收款進帳，就跳票']}
+        fixes={['預收款放獨立帳戶', '出貨前不動用', '公私帳分開']}
+      />
+      <div style={{ fontFamily: serif, fontSize: 44, fontWeight: 700, color: C.berry, marginTop: 36, lineHeight: 1.5 }}>
+        預收款只有一部分是淨利，
+        <br />
+        多數要拿去付食材、房租、薪水。
+      </div>
+    </Body>
+  </Slide>
+);
+
+const Cause23: Page = () => (
+  <Slide>
+    <Eyebrow>原因 ②③</Eyebrow>
+    <H size={72}>擴張太快、人走太急</H>
+    <Body>
+      <div style={{ display: 'flex', gap: 40 }}>
+        <RiskCard
+          tag="原因 ②"
+          title="盲目擴張"
+          risks={['新店初期只有支出沒有收入', '總部、督導、司機要付薪水', '全靠創始店養，一倒全倒']}
+          fixes={['開分店前先試算後勤成本', '準備獨立資金']}
+        />
+        <RiskCard
+          tag="原因 ③"
+          title="員工集體離職"
+          risks={['人補不齊，只好取消大訂單', '短時間大量退款', '現金流卡死']}
+          fixes={['建立 SOP 與人力備援', '接大單前先評估產能']}
+        />
+      </div>
+    </Body>
+  </Slide>
+);
+
+const Path: Page = () => (
+  <Slide>
+    <Eyebrow>前三個原因的共同結局</Eyebrow>
+    <H size={72}>現金流卡死，走向惡意倒閉</H>
+    <Body>
+      <div style={{ display: 'flex', gap: 64, alignItems: 'center' }}>
+        <div style={{ flex: 1.2, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <Step2 n="1">付不出薪水，員工離職</Step2>
+          <Step2 n="2">付不出貨款，沒有原料</Step2>
+          <Step2 n="3">公司已經無法運作</Step2>
+          <Step2 n="4">老闆還繼續接單收錢，補前面的洞</Step2>
+          <div style={{ fontFamily: serif, fontSize: 48, fontWeight: 700, color: C.berry }}>
+            ↓ 演變成惡意倒閉
+          </div>
+        </div>
+        <Card style={{ flex: 0.8, background: C.dark, color: C.darkText, padding: '52px 48px' }}>
+          <div style={{ fontSize: 34, fontWeight: 700, color: C.gold }}>真正的分界點</div>
+          <div style={{ fontFamily: serif, fontSize: 50, fontWeight: 700, lineHeight: 1.45, marginTop: 16 }}>
+            發現撐不住時，
+            <br />
+            繼續收錢，
+            <br />
+            還是停下來處理？
+          </div>
+        </Card>
+      </div>
+    </Body>
+  </Slide>
+);
+
+const Sum1: Page = () => <Summary label="這一類只記一句" line="預收款只有一部分是淨利" />;
+
+/* ---------- 第二類：利潤失準 ---------- */
+
+const Ch2: Page = () => <Chapter no="02" title="利潤失準" sub="原因 ④～⑥" />;
+
+const Cause45: Page = () => (
+  <Slide>
+    <Eyebrow>原因 ④⑤</Eyebrow>
+    <H size={72}>薄利多銷失效，成本又算錯</H>
+    <Body>
+      <div style={{ display: 'flex', gap: 40 }}>
+        <RiskCard
+          tag="原因 ④"
+          title="利潤率過低"
+          risks={['薄利多銷，在萬物齊漲時行不通', '利潤只有 5%（舉例），原料連漲三個月', '不敢一次漲足，只好自己吸收']}
+          fixes={['成本上漲，要有調價機制', '不走薄利多銷']}
+        />
+        <RiskCard
+          tag="原因 ⑤"
+          title="錯估成本"
+          risks={['水果、堅果價格波動，賣一個賠一個', '加班費吃光大單利潤，不如不接']}
+          fixes={['波動食材，在售價預留空間', '接大單前先算加班與臨時人力']}
+        />
+      </div>
+    </Body>
+  </Slide>
+);
+
+const Cause6: Page = () => (
+  <Slide>
+    <Eyebrow>原因 ⑥</Eyebrow>
+    <H size={72}>中型規模，最危險</H>
+    <Body>
+      <div style={{ display: 'flex', gap: 28 }}>
+        <SizeTile name="大型" line="自動化生產，食材成本有優勢" />
+        <SizeTile name="小型" line="街邊店、工作室，能隨時調整成本" />
+        <SizeTile name="中型" line="基本開銷高，進入死循環" danger />
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 18, marginTop: 44, fontSize: 40, fontWeight: 700 }}>
+        <Chip>開銷高</Chip>
+        <Arrow />
+        <Chip>接更多單</Chip>
+        <Arrow />
+        <Chip>請更多人、買設備</Chip>
+        <Arrow />
+        <div style={{ color: C.berry, fontSize: 44 }}>賺越多，花越多</div>
+      </div>
+    </Body>
+  </Slide>
+);
+
+const Story: Page = () => (
+  <Slide>
+    <Eyebrow>業界創業者的親身經歷</Eyebrow>
+    <H size={72}>營業額變多，利潤卻變少</H>
+    <Body>
+      <div style={{ display: 'flex', gap: 48, alignItems: 'stretch' }}>
+        <Card style={{ flex: 1, padding: '44px 48px' }}>
+          <div style={{ fontSize: 36, fontWeight: 700, color: C.muted }}>每月營業額</div>
+          <div style={{ fontFamily: serif, fontSize: 84, fontWeight: 700, color: C.berry, margin: '8px 0' }}>
+            破百萬
+          </div>
+          <div style={{ fontSize: 42 }}>利潤，反而比較少</div>
+        </Card>
+        <Card style={{ flex: 1, padding: '44px 48px' }}>
+          <div style={{ fontSize: 36, fontWeight: 700, color: C.muted }}>每月營業額</div>
+          <div style={{ fontFamily: serif, fontSize: 84, fontWeight: 700, color: 'var(--osd-accent)', margin: '8px 0' }}>
+            七、八十萬
+          </div>
+          <div style={{ fontSize: 42 }}>利潤，反而比較好</div>
+        </Card>
+      </div>
+      <div style={{ fontSize: 40, lineHeight: 1.6, marginTop: 36 }}>
+        成本上漲越來越快，最後選擇退出市場。
+        <br />
+        <b style={{ color: 'var(--osd-accent)' }}>定期檢查：營收成長了，利潤有跟著成長嗎？</b>
+        <Tag />
+      </div>
+      <Note>以上是一位業界創業者的經驗，不是統計</Note>
+    </Body>
+  </Slide>
+);
+
+const Sum2: Page = () => <Summary label="這一類只記一句" line="賺越多，不等於留得越多" />;
+
+/* ---------- 第三類、第四類：外部與老闆 ---------- */
+
+const Ch3: Page = () => <Chapter no="03" title="外部與老闆" sub="原因 ⑦～⑩" />;
+
+const Cause789: Page = () => (
+  <Slide>
+    <Eyebrow>原因 ⑦⑧⑨</Eyebrow>
+    <H size={72}>生意越好，外面的人越盯著你</H>
+    <Body>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <Flip front="⑦ 員工投訴" back="沒回報，主管機關上門" hint="點一下看風險" h={92} />
+        <Flip front="⑧ 鄰居投訴" back="排隊、噪音、異味、垃圾" hint="點一下看風險" h={92} />
+        <Flip front="⑨ 房東" back="大幅漲租，或收回自己做" hint="點一下看風險" h={92} />
+      </div>
+      <Card style={{ marginTop: 24, padding: '24px 40px' }}>
+        <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--osd-accent)' }}>
+          預防
+          <Tag />
+        </div>
+        <div style={{ fontSize: 38, lineHeight: 1.55, marginTop: 6 }}>
+          員工：勞動條件合法，獲利適度分享
+          <br />
+          鄰居：事先規劃排隊動線、排煙、垃圾處理
+          <br />
+          房東：簽長約、分散據點
+        </div>
+      </Card>
+    </Body>
+  </Slide>
+);
+
+const Cause10: Page = () => (
+  <Slide>
+    <Eyebrow>原因 ⑩</Eyebrow>
+    <H size={72}>生意不好店倒，生意好人倒</H>
+    <Body>
+      <RiskPrev
+        risks={['不放心交出工作，一個人扛', '行銷、人事、財務、研發都自己來', '積勞成疾，店沒有老闆就無法運作']}
+        fixes={['學會授權', '培養幹部']}
+      />
+    </Body>
+  </Slide>
+);
+
+const Sum3: Page = () => <Summary label="這一類只記一句" line="學會放手，店和人都留得住" />;
+
+/* ---------- 收尾 ---------- */
+
+const Pitfalls: Page = () => (
+  <Slide>
+    <Eyebrow>踩坑分享</Eyebrow>
+    <H size={72}>預防時，最常敗給這 5 個誘惑</H>
+    <Body>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <Flip front="賺到錢，想快點開分店" back="新店只有支出，拖垮創始店" hint="點一下看後果" h={100} />
+        <Flip front="不敢漲價，怕客人跑" back="成本只好自己吸收" hint="點一下看後果" h={100} />
+        <Flip front="捨不得拒絕大單" back="加班費吃光利潤" hint="點一下看後果" h={100} />
+        <Flip front="不放心交給員工" back="店永遠離不開老闆" hint="點一下看後果" h={100} />
+        <Flip front="把預收款當收入" back="沒新預收款，就跳票" hint="點一下看後果" h={100} />
+      </div>
+    </Body>
+  </Slide>
+);
+
+const Crisis: Page = () => (
+  <Slide>
+    <Eyebrow>真的遇到事情時</Eyebrow>
+    <H size={72}>失敗不只是背債，還會傷到信譽</H>
+    <Body>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 36 }}>
+        <Row n="1">處理錯了，品牌商譽和個人信譽都受傷</Row>
+        <Row n="2">壞消息傳得比好消息快，很多事先散佈再查證</Row>
+        <Row n="3">唯一的解法：坦然面對，一件一件協商處理</Row>
+      </div>
+      <Note>需要有人聊聊，可以撥安心專線 1925</Note>
+    </Body>
+  </Slide>
+);
+
+const Tool: Page = () => (
+  <Slide>
+    <Eyebrow>
+      今天帶走的工具
+      <Tag>整理成體檢表</Tag>
+    </Eyebrow>
+    <H size={72}>生意好也撐得住的 5 項體檢</H>
+    <Body>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 26 }}>
+        <ChkRow>現金充足：預收款與營運資金分開管理</ChkRow>
+        <ChkRow>利潤健康：成本上漲有調價機制</ChkRow>
+        <ChkRow>擴張有計畫：分店有獨立資金</ChkRow>
+        <ChkRow>關係穩定：員工、鄰居、房東都不是風險</ChkRow>
+        <ChkRow>老闆能休息：有幹部分擔，生意好，人不倒</ChkRow>
+      </div>
+      <Note>沒打勾的那一項，就是你最該先處理的風險</Note>
+    </Body>
+  </Slide>
+);
+
+const DiscussQA: Page = () => (
+  <Slide>
+    <Eyebrow>課堂討論＋ Q&amp;A</Eyebrow>
+    <H size={72}>先聊 3 分鐘，再來問答</H>
+    <Body>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 36 }}>
+        <Row n="1">你的店型，最容易遇到 10 個原因中的哪三個？</Row>
+        <Row n="2">你會怎麼管理「預收款」？</Row>
+        <Row n="3">房東突然要收回店面，你的 B 計畫是什麼？</Row>
+      </div>
+      <div style={{ fontFamily: serif, fontSize: 64, fontWeight: 700, color: 'var(--osd-accent)', marginTop: 56 }}>
+        Q&amp;A　有問題，現在問
+      </div>
+    </Body>
+  </Slide>
+);
+
+const TakeAway: Page = () => (
+  <Slide>
+    <Eyebrow>今天帶走的三樣</Eyebrow>
+    <H size={72}>一個觀念、一個工具、一個行動</H>
+    <Body>
+      <div style={{ display: 'flex', gap: 36 }}>
+        <Col tag="觀念" title="生意好≠安全" body={'10 個原因\n只在生意好時發生'} />
+        <Col tag="工具" title="5 項體檢表" body={'看見最該先處理\n的那個風險'} />
+        <Col tag="行動" title="圈出 3 個風險" body={'選出你最容易遇到的\n寫下一個預防做法'} />
+      </div>
+    </Body>
+  </Slide>
+);
+
+const Closing: Page = () => (
+  <Slide dark center>
+    <div style={{ fontSize: 32, color: C.gold, letterSpacing: '0.12em', fontWeight: 700 }}>
+      最後一句話
+    </div>
+    <H size={112} dark style={{ marginTop: 32, lineHeight: 1.3 }}>
+      只要活著，就有希望。
+    </H>
+    <div style={{ fontSize: 42, color: C.darkMuted, marginTop: 48, lineHeight: 1.6 }}>
+      人們對一個人最終的評價，不在於他做錯過什麼，
+      <br />
+      而在於他怎麼處理那些事。
+    </div>
+    <div style={{ fontSize: 40, color: C.gold, marginTop: 40 }}>
+      再問一次：生意很好的店，會突然倒閉嗎？
+    </div>
+  </Slide>
+);
+
+export const notes: (string | undefined)[] = [
+  '歡迎大家。今天的主題是：生意超好的店，為什麼還會倒。這個問題對每個準備開店的人都很重要。',
+  '先請大家舉手：生意很好的店，會突然倒閉嗎？A 不太可能、B 有可能、C 很常見。把票數記在黑板上，最後一頁再問一次。',
+  '業界最近有一件事：一家網路上有十幾萬粉絲、看起來生意很好的甜點店，突然走到棄單、貨款跳票。我們不評論個案，也不談細節，只從經營者的角度問：哪些情況，會讓生意好的店突然倒下？雖然以甜點店為例，但適用多數餐飲業。',
+  '先講清楚這場不是什麼：不評論個案、不是教你別賺錢、不是只有甜點店才會遇到。是從經營者角度，看生意好時的風險。',
+  '10 個原因分 4 類：現金流、利潤、外部關係、老闆本身。注意，這 10 個原因，都只有生意好的時候才會發生，生意還不穩定時，反而不容易有這些問題。',
+  undefined,
+  '原因一：預收款提早花完。烘焙店常賣禮盒、生日蛋糕，先收錢、幾個月後才出貨。老闆容易有現金超多的錯覺，挪去別的用途，甚至匯進私人帳戶。但預收款只有一部分是淨利，多數要拿去付食材、房租、薪水。生意一直好，後面的錢補前面的，不會出事；一段時間沒有預收款，就跳票。餐廳賣餐券、商品券也一樣。右邊的預防做法是我們整理的延伸建議。',
+  '原因二：盲目擴張。新店初期只有支出沒有收入，店一多還要增加總部、督導、司機這些不直接賺錢的人，成本不是創始店乘以二。全靠創始店養，一倒就全倒。原因三：員工集體離職。人補不齊，只好取消熬夜也做不完的大訂單，短時間大量退款，現金流就卡死。',
+  '前三個原因，都是現金流卡死。付不出薪水，員工離職；付不出貨款，沒有原料。如果老闆在公司已經無法運作時，還繼續接單收錢補前面的洞，最後就演變成惡意倒閉。真正的分界點，是發現撐不住時，選擇繼續收錢，還是停下來處理。',
+  '第一類只記一句：預收款只有一部分是淨利。',
+  undefined,
+  '原因四：利潤率過低。父母輩的薄利多銷，在萬物齊漲的現在行不通。舉例：利潤只有 5%，原料連漲三個月，又不敢一次漲足，只好自己吸收。這個 5% 是舉例，不是統計。原因五：錯估成本。水果、堅果價格波動大，沒預留空間就賣一個賠一個；大訂單的加班費吃光利潤，忙好幾天還不如不接。',
+  '原因六：落入中型規模死循環。後疫情時代成本每幾個月就大幅上升。大型有自動化和成本優勢，小型能隨時調整成本，中型最危險：開銷高，被迫接更多單，要請更多人、買更多設備，賺越多花越多。',
+  '這是一位業界創業者的親身經歷：月營業額破百萬，利潤卻不如只做七、八十萬時好，加上成本上漲越來越快，最後選擇退出市場。這是個人經驗，不是統計。建議定期檢查：營收成長了，利潤有跟著成長嗎？這是我們整理的延伸建議。',
+  '第二類只記一句：賺越多，不等於留得越多。',
+  undefined,
+  '這一頁是翻牌卡，請同學先猜，再點一下看風險。注意：要按 F 進播放模式才點得動。原因七：員工投訴。生意最好、工作量最大時，員工發現公司很賺、自己卻沒有相對的回報，衛生局、勞工局、甚至國稅局就上門了。原因八：鄰居投訴。排隊人潮、噪音、異味、垃圾與鼠蟲，老闆光應付鄰居和機關，生意都不用做了。原因九：房東。生意好，房東可能大幅漲租，或找理由收回店面自己做，很大機率賣一模一樣的商品。下面的預防做法是延伸建議。',
+  '原因十：老闆堅持自己來。餐飲業有句俗語：生意不好店倒，生意好人倒。生意好時，產品、行銷、人事、財務、研發全都等著老闆，積勞成疾住院，店沒有老闆就無法運作，只好收店。預防：學會授權，培養幹部。',
+  '第三類只記一句：學會放手，店和人都留得住。',
+  '預防時最常敗給五個誘惑，一樣是翻牌卡。賺到錢想快點開分店；不敢漲價、成本自己吸收；捨不得拒絕大單；不放心交給員工；把預收款當收入。請同學先猜後果再翻。',
+  '真的遇到事情時：失敗不只是背債，處理錯了，品牌商譽和個人信譽都會受傷。人人都是媒體的時代，壞消息傳得比好消息快。但成年人做錯事，唯一的解法是坦然面對，一件一件協商處理。如果同學或身邊的人有壓力很大的時候，可以撥安心專線 1925。',
+  '這是今天帶走的工具：生意好也撐得住的 5 項體檢表。這張表是我們整理的延伸建議，請大家抄下來。沒打勾的那一項，就是你最該先處理的風險。',
+  '請和旁邊的人聊三分鐘，三題任選，聊完請兩到三位同學分享。接著開放問答。',
+  '帶走三樣：一個觀念，生意好不等於安全；一個工具，5 項體檢表；一個行動，圈出你的店最容易遇到的三個風險，各寫一個預防做法。',
+  '最後一句話：只要活著，就有希望。人們對一個人最終的評價，不在於他做錯過什麼，而在於他怎麼處理那些事。現在回到一開始的問題，再舉一次手：生意很好的店，會突然倒閉嗎？看看答案和一開始比，有沒有改變。謝謝大家。',
+];
+
+export const meta: SlideMeta = {
+  title: '生意超好，為什麼還會倒？',
+  createdAt: '2026-10-10T07:34:57.671Z',
+};
+
+export default [
+  Cover,
+  Hook,
+  Intro,
+  NotThis,
+  Agenda,
+  Ch1,
+  Cause1,
+  Cause23,
+  Path,
+  Sum1,
+  Ch2,
+  Cause45,
+  Cause6,
+  Story,
+  Sum2,
+  Ch3,
+  Cause789,
+  Cause10,
+  Sum3,
+  Pitfalls,
+  Crisis,
+  Tool,
+  DiscussQA,
+  TakeAway,
+  Closing,
+] satisfies Page[];
