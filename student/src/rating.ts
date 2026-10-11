@@ -5,8 +5,6 @@ export type PageStat = { avg: number; count: number };
 export type Summary = {
   views: Record<string, number>;
   pages: Record<string, Record<string, PageStat>>;
-  /** 講師站開關設定的公開清單；null＝還沒設定過 */
-  public?: string[] | null;
 };
 
 function store(): Storage | null {
