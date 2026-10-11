@@ -5,6 +5,8 @@ export type PageStat = { avg: number; count: number };
 export type Summary = {
   views: Record<string, number>;
   pages: Record<string, Record<string, PageStat>>;
+  /** 講師站開關設定的公開清單；null＝還沒設定過 */
+  public?: string[] | null;
 };
 
 function store(): Storage | null {
@@ -66,10 +68,15 @@ export function countView(deck: string) {
 
 export async function fetchSummary(): Promise<Summary | null> {
   if (!RATING_ENDPOINT) return null;
+  // 最多等 8 秒，連不上就當作沒有資料
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 8000);
   try {
-    const res = await fetch(`${RATING_ENDPOINT}?action=summary`);
+    const res = await fetch(`${RATING_ENDPOINT}?action=summary`, { signal: ctrl.signal });
     return (await res.json()) as Summary;
   } catch {
     return null;
+  } finally {
+    clearTimeout(timer);
   }
 }

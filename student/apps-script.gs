@@ -5,11 +5,15 @@
  *   評分紀錄：每台裝置對每一頁只留一筆（重按會覆蓋），匿名
  *   頁面統計：每份簡報每一頁的評分人數與平均星數（公式自動算）
  *   瀏覽次數：每份簡報被開啟的累積次數
+ *   公開設定：講師站開關寫入，決定學員站顯示哪幾份（第一次在講師站切換後才出現）
  */
 
 const LOG = '評分紀錄';
 const STAT = '頁面統計';
 const VIEW = '瀏覽次數';
+const PUB = '公開設定';
+// 講師密碼的 SHA-256（與 tools/add-gate.mjs 的 HASH 相同）；改密碼時兩邊一起改
+const ADMIN_HASH = '0dfaa2548fff16d3e2945fa4685ada1d5c373c28ff08044483b1534ab2350c3d';
 
 function doGet() {
   return json_(summary_());
@@ -17,6 +21,20 @@ function doGet() {
 
 function doPost(e) {
   const d = JSON.parse((e.postData && e.postData.contents) || '{}');
+
+  // 講師站切換各簡報是否開放給學員
+  if (d.action === 'setPublic') {
+    if (!checkKey_(d.key)) return json_({ ok: false, error: '密碼不正確' });
+    const lock = LockService.getScriptLock();
+    lock.waitLock(10000);
+    try {
+      writePublic_(d.decks || []);
+      return json_({ ok: true, public: readPublic_() });
+    } finally {
+      lock.releaseLock();
+    }
+  }
+
   const deck = String(d.deck || '');
   if (!/^\d{2}$/.test(deck)) return json_({ ok: false, error: 'bad deck' });
 
@@ -53,6 +71,9 @@ function sheet_(name) {
     sh.getRange('C:C').setNumberFormat('@');
   } else if (name === VIEW) {
     sh.appendRow(['簡報', '瀏覽次數']);
+    sh.getRange('A:A').setNumberFormat('@');
+  } else if (name === PUB) {
+    sh.appendRow(['簡報', '標題', '開放給學員']);
     sh.getRange('A:A').setNumberFormat('@');
   } else if (name === STAT) {
     sheet_(LOG);
@@ -131,7 +152,45 @@ function summary_() {
       views[String(r[0])] = Number(r[1]);
     });
   }
-  return { views: views, pages: pages };
+  return { views: views, pages: pages, public: readPublic_() };
+}
+
+function checkKey_(key) {
+  const bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(key || ''), Utilities.Charset.UTF_8);
+  const hex = bytes
+    .map(function (b) {
+      return ((b + 256) % 256).toString(16).padStart(2, '0');
+    })
+    .join('');
+  return hex === ADMIN_HASH;
+}
+
+// 還沒設定過時回傳 null，學員站就沿用 public.json 的預設清單
+function readPublic_() {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(PUB);
+  if (!sh || sh.getLastRow() < 2) return null;
+  return sh
+    .getRange(2, 1, sh.getLastRow() - 1, 3)
+    .getValues()
+    .filter(function (r) {
+      return r[2] === '是';
+    })
+    .map(function (r) {
+      return String(r[0]);
+    });
+}
+
+function writePublic_(decks) {
+  const rows = decks
+    .filter(function (x) {
+      return /^\d{2}$/.test(String(x.no));
+    })
+    .map(function (x) {
+      return [String(x.no), String(x.title || '').slice(0, 100), x.on ? '是' : '否'];
+    });
+  const sh = sheet_(PUB);
+  if (sh.getLastRow() > 1) sh.getRange(2, 1, sh.getLastRow() - 1, 3).clearContent();
+  if (rows.length) sh.getRange(2, 1, rows.length, 3).setValues(rows);
 }
 
 function json_(obj) {

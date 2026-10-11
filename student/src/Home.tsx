@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState } from 'react';
-import { type DeckModule, decks } from 'virtual:decks';
+import type { DeckModule, decks as allDecks } from 'virtual:decks';
 import type { Summary } from './rating';
 import { CANVAS_WIDTH, Canvas, PageProvider } from './runtime';
 
@@ -42,7 +42,15 @@ function Thumb({ mod }: { mod?: DeckModule }) {
   );
 }
 
-export function Home({ mods, summary }: { mods: Record<string, DeckModule>; summary: Summary | null }) {
+export function Home({
+  decks,
+  mods,
+  summary,
+}: {
+  decks: typeof allDecks;
+  mods: Record<string, DeckModule>;
+  summary: Summary | null;
+}) {
   return (
     <main className="home">
       <header className="home-head">

@@ -3,4 +3,5 @@ declare module 'virtual:decks' {
   import type { DesignSystem, SlideMeta } from '@open-slide/core';
   export type DeckModule = { default: ComponentType[]; design?: DesignSystem; meta?: SlideMeta };
   export const decks: { no: string; pdf: string | null; load: () => Promise<DeckModule> }[];
+  export const defaultPublic: string[];
 }
