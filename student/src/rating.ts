@@ -68,9 +68,9 @@ export function countView(deck: string) {
 
 export async function fetchSummary(): Promise<Summary | null> {
   if (!RATING_ENDPOINT) return null;
-  // 最多等 8 秒，連不上就當作沒有資料
+  // 最多等 20 秒，連不上就當作沒有資料
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 8000);
+  const timer = setTimeout(() => ctrl.abort(), 20000);
   try {
     const res = await fetch(`${RATING_ENDPOINT}?action=summary`, { signal: ctrl.signal });
     return (await res.json()) as Summary;
