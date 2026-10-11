@@ -1248,8 +1248,8 @@ export const notes: (string | undefined)[] = [
 ];
 
 export const meta: SlideMeta = {
-  title: '生意超好，為什麼還會倒？',
-  createdAt: '2026-10-10T21:55:20.919Z',
+  title: '02｜生意超好，為什麼還會倒？',
+  createdAt: '2026-10-11T00:00:50.000Z',
 };
 
 export default [

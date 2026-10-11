@@ -1218,8 +1218,8 @@ export const notes: (string | undefined)[] = [
 ];
 
 export const meta: SlideMeta = {
-  title: '烘焙興趣變現：新手如何從 0 到月入 3 萬？',
-  createdAt: '2026-10-10T21:55:21.009Z',
+  title: '05｜烘焙興趣變現：新手如何從 0 到月入 3 萬？',
+  createdAt: '2026-10-11T00:00:35.000Z',
 };
 
 export default [

@@ -1115,8 +1115,8 @@ export const notes: (string | undefined)[] = [
 ];
 
 export const meta: SlideMeta = {
-  title: '六件我希望在開店前就知道的事',
-  createdAt: '2026-10-10T06:26:02.542Z',
+  title: '03｜六件我希望在開店前就知道的事',
+  createdAt: '2026-10-11T00:00:45.000Z',
 };
 
 export default [

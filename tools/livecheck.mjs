@@ -2,7 +2,7 @@ import { chromium } from 'playwright-core';
 const base = 'https://necva2018-lang.github.io/open-slide_a01';
 const b = await chromium.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe' });
 const ctx = await b.newContext({ viewport: { width: 1920, height: 1080 } });
-const ids = { '01-slow-death': 26, '02-busy-but-closed': 25, 'six-things-before-opening': 25, '04-studio-vs-shop': 26, '05-hobby-to-income': 26, '06-five-blind-spots': 25, '07-social-five-rules': 26, '08-handmade-trap': 26, '09-bakery-owner': 26, '10-bento-founder': 26 };
+const ids = { '01-slow-death': 26, '02-busy-but-closed': 25, '03-six-things-before-opening': 25, '04-studio-vs-shop': 26, '05-hobby-to-income': 26, '06-five-blind-spots': 25, '07-social-five-rules': 26, '08-handmade-trap': 26, '09-bakery-owner': 26, '10-bento-founder': 26 };
 const out = [];
 let pg = await ctx.newPage();
 const bad = [];

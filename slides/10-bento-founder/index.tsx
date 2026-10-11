@@ -1156,8 +1156,8 @@ export const notes: (string | undefined)[] = [
 ];
 
 export const meta: SlideMeta = {
-  title: '230 元的便當怎麼賣？',
-  createdAt: '2026-10-10T21:55:21.223Z',
+  title: '10｜230 元的便當怎麼賣？',
+  createdAt: '2026-10-11T00:00:10.000Z',
 };
 
 export default [

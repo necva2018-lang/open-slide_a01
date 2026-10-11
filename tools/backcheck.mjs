@@ -4,7 +4,7 @@ import fs from 'node:fs';
 const targets = [
   ['01-slow-death', [18, 21]],
   ['02-busy-but-closed', [17, 20]],
-  ['six-things-before-opening', [19]],
+  ['03-six-things-before-opening', [19]],
   ['04-studio-vs-shop', [21]],
   ['05-hobby-to-income', [21, 22]],
   ['06-five-blind-spots', [19]],

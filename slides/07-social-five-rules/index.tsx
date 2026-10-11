@@ -1147,8 +1147,8 @@ export const notes: (string | undefined)[] = [
 ];
 
 export const meta: SlideMeta = {
-  title: 'IG 發了一堆甜點照，為什麼還是沒訂單？',
-  createdAt: '2026-10-10T21:55:21.094Z',
+  title: '07｜IG 發了一堆甜點照，為什麼還是沒訂單？',
+  createdAt: '2026-10-11T00:00:25.000Z',
 };
 
 export default [

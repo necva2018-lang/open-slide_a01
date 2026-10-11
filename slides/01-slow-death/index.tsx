@@ -1135,8 +1135,8 @@ export const notes: (string | undefined)[] = [
 ];
 
 export const meta: SlideMeta = {
-  title: '開店＝慢性死亡？',
-  createdAt: '2026-10-10T21:55:20.876Z',
+  title: '01｜開店＝慢性死亡？',
+  createdAt: '2026-10-11T00:00:55.000Z',
 };
 
 export default [

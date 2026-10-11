@@ -1170,8 +1170,8 @@ export const notes: (string | undefined)[] = [
 ];
 
 export const meta: SlideMeta = {
-  title: '「純手工」是烘焙小店最大的陷阱？',
-  createdAt: '2026-10-10T21:55:21.137Z',
+  title: '08｜「純手工」是烘焙小店最大的陷阱？',
+  createdAt: '2026-10-11T00:00:20.000Z',
 };
 
 export default [

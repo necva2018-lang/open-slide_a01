@@ -1175,8 +1175,8 @@ export const notes: (string | undefined)[] = [
 ];
 
 export const meta: SlideMeta = {
-  title: '比起技術，消費者更在意什麼？',
-  createdAt: '2026-10-10T21:55:21.181Z',
+  title: '09｜比起技術，消費者更在意什麼？',
+  createdAt: '2026-10-11T00:00:15.000Z',
 };
 
 export default [

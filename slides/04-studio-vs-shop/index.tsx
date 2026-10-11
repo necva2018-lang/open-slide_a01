@@ -1300,8 +1300,8 @@ export const notes: (string | undefined)[] = [
 ];
 
 export const meta: SlideMeta = {
-  title: '個人工作室 vs. 實體門市，該如何選擇？',
-  createdAt: '2026-10-10T21:55:20.964Z',
+  title: '04｜個人工作室 vs. 實體門市，該如何選擇？',
+  createdAt: '2026-10-11T00:00:40.000Z',
 };
 
 export default [

@@ -1210,8 +1210,8 @@ export const notes: (string | undefined)[] = [
 ];
 
 export const meta: SlideMeta = {
-  title: '為什麼你的甜點很好吃，卻沒人買？',
-  createdAt: '2026-10-10T21:55:21.051Z',
+  title: '06｜為什麼你的甜點很好吃，卻沒人買？',
+  createdAt: '2026-10-11T00:00:30.000Z',
 };
 
 export default [
