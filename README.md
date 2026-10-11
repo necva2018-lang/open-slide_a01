@@ -2,7 +2,8 @@
 
 為「職訓班・餐飲創業課程」製作的 10 份講座簡報，用 [open-slide](https://open-slide.dev) 以 React 撰寫，可在瀏覽器播放、輸出 PDF，並以 GitHub Pages 發布成靜態網站。
 
-- 線上簡報：<https://necva2018-lang.github.io/open-slide_a01/>
+- 學員站：<https://necva2018-lang.github.io/open-slide_a01/student/>（只顯示已公開的簡報）
+- 講師站：<https://necva2018-lang.github.io/open-slide_a01/>（需輸入密碼）
 - 場合：職訓班課程，每份約 45 分鐘，約 25 頁
 - 聽眾：求職待業、正在接受專業技能培訓的學員，對主題多半沒接觸過
 
@@ -29,6 +30,7 @@
 .
 ├── slides/            10 份簡報，每份一個資料夾（index.tsx＋講者備註 notes）
 ├── pdf/               10 份簡報的 PDF（逐頁截圖合併，翻牌卡只顯示正面）
+├── student/           學員站：公開清單、播放器、星星評價（見 student/README.md）
 ├── tools/             產生簡報的工具：共用元件、色票、頁面原稿、截圖與 PDF 腳本
 ├── docs/              製作規則與兩份製作報告
 ├── .github/workflows/ GitHub Pages 自動部署
@@ -79,6 +81,8 @@ node tools/mkpdf.mjs <截圖資料夾> <頁數> <輸出pdf> <標題>
 - 部署時以環境變數 `BASE_PATH=/open-slide_a01/` 建置，網站路徑才會正確。
 - GitHub Pages 沒有伺服器端轉址，所以建置後把 `index.html` 複製為 `404.html`，讓直接開啟 `/s/<id>` 的連結也能進入簡報。
 - 靜態網站上的 Inspector 留言與設計面板不可用（它們需要開發伺服器），只能播放與瀏覽。
+- 建置後由 `tools/add-gate.mjs` 在講師站加上密碼畫面；接著建置學員站到 `dist/student/`。
+- 講師站密碼只在瀏覽器端檢查，能擋一般人但擋不住懂技術的人；本 repo 為公開，原始碼（含講者備註）在 GitHub 上看得到。
 
 ## 六、已知限制
 

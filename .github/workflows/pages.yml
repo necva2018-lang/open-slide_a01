@@ -27,8 +27,12 @@ jobs:
       - run: npm run build
         env:
           BASE_PATH: /open-slide_a01/
+      # 講師站加上簡易密碼畫面
+      - run: node tools/add-gate.mjs
       # GitHub Pages 沒有伺服器端轉址，直接開 /s/<id> 會 404；用 404.html 回到單頁應用
       - run: cp dist/index.html dist/404.html
+      # 學員站：只打包 student/public.json 列出的簡報，輸出到 dist/student/
+      - run: npx vite build --config student/vite.config.ts
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
